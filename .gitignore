@@ -25,6 +25,5 @@ go.work.sum
 .vscode
 *.db
 *.log
-job.log
 .idea
 .DS_Store

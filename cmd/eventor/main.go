@@ -17,7 +17,7 @@ func main() {
 
 	db.MustSetup("eventor.db", logger)
 
-	go handlers.RunEventPoller(context.Background(), lib.MustSetupLogging("job.log", false, cfg.ENV), cfg)
+	go handlers.RunEventPoller(context.Background(), lib.MustSetupLogging("eventor_job.log", false, cfg.ENV), cfg)
 
 	bot := telegram.NewBot(cfg.BotToken, nil)
 

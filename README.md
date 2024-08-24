@@ -7,7 +7,7 @@
    - устанавливаем goose, например: brew install goose
    - из каталога /cmd запускаем команду
    ```shell
-   goose -dir=../migrations sqlite3 eventor.db up
+   goose -dir=../../migrations sqlite3 eventor.db up
    ```
 3. запускаем бота из каталога /cmd:
    ```shell

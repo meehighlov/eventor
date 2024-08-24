@@ -35,11 +35,11 @@ var cfg Config
 // panics on any read error
 // also sets TZ env variable from according .env value
 func MustLoad() *Config {
-	if _, err := os.Stat(".env"); os.IsNotExist(err) {
+	if _, err := os.Stat("env/eventor/.env"); os.IsNotExist(err) {
 		log.Fatal("Not found .env file")
 	}
 
-	err := cleanenv.ReadConfig(".env", &cfg)
+	err := cleanenv.ReadConfig("env/eventor/.env", &cfg)
 	if err != nil {
 		log.Fatal("Failed to read envs:", err.Error())
 	}
