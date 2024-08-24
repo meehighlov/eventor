@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"sort"
 	"strconv"
 
 	"github.com/meehighlov/eventor/internal/config"
@@ -34,28 +35,18 @@ func ListEventsHandler(event telegram.Event) error {
 	}
 
 	if len(events) == 0 {
-		event.Reply(ctx, "Событий пока нет✨")
+		event.Reply(ctx, HEADER_MESSAGE_LIST_IS_EMPTY)
 		return nil
 	}
 
-	eventsAsButtons := buildEventsButtons(events, LIST_LIMIT, LIST_START_OFFSET)
-	pagiButtons := buildPagiButtons(len(events), LIST_LIMIT, LIST_START_OFFSET)
-
-	markup := [][]map[string]string{}
-
-	for _, button := range eventsAsButtons {
-		markup = append(markup, []map[string]string{button})
-	}
-
-	if len(pagiButtons) > 0 {
-		markup = append(markup, pagiButtons[0])
-	}
-
-	event.ReplyWithKeyboard(ctx, "Нажми на событие, чтобы узнать детали", markup)
+	event.ReplyWithKeyboard(
+		ctx,
+		HEADER_MESSAGE_LIST_NOT_EMPTY,
+		buildEventListMarkup(events, LIST_LIMIT, LIST_START_OFFSET),
+	)
 
 	return nil
 }
-
 
 func buildPagiButtons(total, limit, offset int) [][]map[string]string {
 	if total == 0 {
@@ -64,7 +55,7 @@ func buildPagiButtons(total, limit, offset int) [][]map[string]string {
 	if offset == total {
 		return [][]map[string]string{{
 			{
-				"text": "свернуть👆",
+				"text": "свернуть",
 				"callback_data": models.CallList(strconv.Itoa(LIST_START_OFFSET), "<<<").String(),
 			},
 		}}
@@ -152,6 +143,7 @@ func ListEventsCallbackQueryHandler(event telegram.Event) error {
 }
 
 func buildEventsButtons(events []db.Event, limit, offset int) []map[string]string {
+	sort.Slice(events, func(i, j int) bool { return eventsComparator(events, i, j) })
 	var buttons []map[string]string
 	for i, event := range events {
 		if offset != len(events) {
@@ -185,4 +177,10 @@ func buildEventListMarkup(friends []db.Event, limit, offset int) [][]map[string]
 	markup = append(markup, pagiButtons...)
 
 	return markup
+}
+
+func eventsComparator(events []db.Event, i, j int) bool {
+	countI := events[i].CountDaysToBegin()
+	countJ := events[j].CountDaysToBegin()
+	return countI < countJ
 }

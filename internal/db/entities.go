@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/meehighlov/eventor/internal/config"
 )
 
 type BaseFields struct {
@@ -50,6 +51,24 @@ type Event struct {
 	Text     string
 	NotifyAt string
 	Delta    string
+}
+
+func (e *Event) CountDaysToBegin() int {
+	location, err := time.LoadLocation(config.Cfg().Timezone)
+	if err != nil {
+		slog.Error("error loading location by timezone, using system timezone, error: " + err.Error() + " eventId: " + e.ID)
+	}
+	now := time.Now().In(location)
+	notify, err := time.Parse("02.01.2006 15:04", e.NotifyAt)
+	if err != nil {
+		slog.Error("error parsing notify during count days to event begining: " + err.Error())
+		return -1
+	}
+
+	diff := now.Sub(notify)
+	diff_days := diff.Hours() / 24
+
+	return int(diff_days)
 }
 
 func (event *Event) NotifyAtAsTimeObject() (time.Time, error) {

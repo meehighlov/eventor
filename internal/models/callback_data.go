@@ -28,6 +28,10 @@ func CallInfo(id, offset string) *CallbackDataModel {
 	return newCallback("info", id, offset, "", "event")
 }
 
+func CallConflicts(id string) *CallbackDataModel {
+	return newCallback("conflicts", id, "0", "", "event")
+}
+
 func newCallback(command, id, offset, direction, entity string) *CallbackDataModel {
 	return &CallbackDataModel{
 		Command: command,

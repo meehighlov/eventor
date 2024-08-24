@@ -28,5 +28,8 @@ func CallbackQueryHandler(event telegram.Event) error {
 	if command == "delete" {
 		DeleteEventCallbackQueryHandler(event)
 	}
+	if command == "conflicts" {
+		CheckConflictsCallbackHandler(event)
+	}
 	return nil
 }
