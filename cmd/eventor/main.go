@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/meehighlov/eventor/internal/auth"
 	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
 	"github.com/meehighlov/eventor/internal/handlers"
@@ -21,10 +22,10 @@ func main() {
 
 	bot := telegram.NewBot(cfg.BotToken, nil)
 
-	bot.RegisterCommandHandler("/start", handlers.StartHandler)
-	bot.RegisterCommandHandler("/commands", handlers.CommandsHandler)
-	bot.RegisterCommandHandler("/add", telegram.FSM(handlers.AddEventHandler()))
-	bot.RegisterCommandHandler("/list", handlers.ListEventsHandler)
+	bot.RegisterCommandHandler("/start", auth.Auth(handlers.StartHandler))
+	bot.RegisterCommandHandler("/commands", auth.Auth(handlers.CommandsHandler))
+	bot.RegisterCommandHandler("/add", auth.Auth(telegram.FSM(handlers.AddEventHandler())))
+	bot.RegisterCommandHandler("/list", auth.Auth(handlers.ListEventsHandler))
 
 	bot.RegisterCallbackQueryHandler(handlers.CallbackQueryHandler)
 
