@@ -21,5 +21,10 @@
 go.work
 go.work.sum
 
-# env file
 .env
+.vscode
+*.db
+*.log
+job.log
+.idea
+.DS_Store
