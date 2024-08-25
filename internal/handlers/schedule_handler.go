@@ -8,7 +8,7 @@ import (
 	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
-func addEventEntry(event telegram.Event) (int, error) {
+func scheduleEntry(event telegram.Event) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
 	defer cancel()
 
@@ -19,20 +19,20 @@ func addEventEntry(event telegram.Event) (int, error) {
 	return 2, nil
 }
 
-func addEventAccepTimestamp(event telegram.Event) (int, error) {
+func scheduleAcceptTimestamp(event telegram.Event) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
 	defer cancel()
 
 	event.GetContext().AppendText(event.GetMessage().Text)
 
-	msg := "Введи дату и время события"
+	msg := "Введи день недели и время"
 
 	event.Reply(ctx, msg)
 
 	return 3, nil
 }
 
-func addEventSave(event telegram.Event) (int, error) {
+func scheduleSave(event telegram.Event) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
 	defer cancel()
 
@@ -41,30 +41,26 @@ func addEventSave(event telegram.Event) (int, error) {
 
 	message := event.GetMessage()
 
-	e, err := db.BuildEvent(
+	s := db.NewSchedule(
 		message.From.Id,
 		message.GetChatIdStr(),
 		eventText,
+		"d",
 		timestamp,
 	)
 
-	if err != nil {
-		event.Reply(ctx, "Ошибка добавления события: " + err.Error() +"\nпопробуй снова")
-		return 3, nil
-	}
+	s.Save(ctx)
 
-	e.Save(ctx)
-
-	msg := "Событие сохранено"
+	msg := "Расписание обновлено"
 	event.Reply(ctx, msg)
 
 	return -1, nil
 }
 
-func AddEventHandler() map[int]telegram.CommandStepHandler {
+func ScheduleHandler() map[int]telegram.CommandStepHandler {
 	return map[int]telegram.CommandStepHandler{
-		1: addEventEntry,
-		2: addEventAccepTimestamp,
-		3: addEventSave,
+		1: scheduleEntry,
+		2: scheduleAcceptTimestamp,
+		3: scheduleSave,
 	}
 }

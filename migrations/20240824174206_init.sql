@@ -21,6 +21,16 @@ CREATE TABLE IF NOT EXISTS event (
     createdat VARCHAR,
     updatedat VARCHAR
 );
+CREATE TABLE IF NOT EXISTS schedule (
+    id VARCHAR PRIMARY KEY,
+    chatid VARCHAR,
+    ownerid INTEGER,
+    text VARCHAR,
+    delta VARCHAR,
+    day VARCHAR,
+    createdat VARCHAR,
+    updatedat VARCHAR
+)
 -- +goose StatementEnd
 
 -- +goose Down

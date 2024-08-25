@@ -6,13 +6,14 @@ import (
 	"log/slog"
 	"strconv"
 
+	"github.com/meehighlov/eventor/internal/common"
 	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
 	"github.com/meehighlov/eventor/internal/models"
 	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
-func DeleteEventCallbackQueryHandler(event telegram.Event) error {
+func DeleteItemCallbackQueryHandler(event telegram.Event) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
 	defer cancel()
 
@@ -39,13 +40,13 @@ func DeleteEventCallbackQueryHandler(event telegram.Event) error {
 		{
 			{
 				"text": "к списку",
-				"callback_data": models.CallList(strconv.Itoa(LIST_START_OFFSET), "<").String(),
+				"callback_data": models.CallList(strconv.Itoa(common.LIST_START_OFFSET), "<").String(),
 			},
 		},
 	}
 
 	event.EditCalbackMessage(ctx, "Событие удалено", markup)
-	callBackMsg := fmt.Sprintf("Событие %s удалено", event_.Text)
+	callBackMsg := fmt.Sprintf("Событие %s удалено", event_.Info())
 	event.ReplyCallbackQuery(ctx, callBackMsg)
 
 	return nil

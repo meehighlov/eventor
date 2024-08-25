@@ -4,56 +4,38 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/meehighlov/eventor/internal/config"
 )
-
-type BaseFields struct {
-	ID        string
-	CreatedAt string
-	UpdatedAt string
-}
-
-func (b *BaseFields) RefresTimestamps() (created string, updated string, _ error) {
-	now := time.Now().Format("02.01.2006T15:04:05")
-	if b.CreatedAt == "" {
-		b.CreatedAt = now
-	}
-	b.UpdatedAt = now
-
-	return b.CreatedAt, b.UpdatedAt, nil
-}
-
-func NewBaseFields() BaseFields {
-	now := time.Now().Format("02.01.2006T15:04:05")
-	return BaseFields{uuid.New().String(), now, now}
-}
-
-type User struct {
-	// telegram user -> bot's user
-
-	BaseFields
-
-	TGId       int // telegram user id
-	Name       string
-	TGusername string
-	ChatId     int // chatId - id of chat with user, bot uses it to send notification
-}
 
 type Event struct {
 	BaseFields
 
-	ChatId   string // chatId - id of chat with user, bot uses it to send notification
-	OwnerId  int // telegram user id
+	// chatId - id of chat with user, bot uses it to send notification
+	ChatId string
+
+	// telegram user id
+	OwnerId int
+
 	Text     string
 	NotifyAt string
 	Delta    string
 }
 
-func (e *Event) CountDaysToBegin() int {
+func (e Event) Id() string {
+	return e.ID
+}
+
+func (e Event) Info() string {
+	return e.Text
+}
+
+func (e Event) Name() string {
+	return "event"
+}
+
+func (e Event) Compare() int {
 	location, err := time.LoadLocation(config.Cfg().Timezone)
 	if err != nil {
 		slog.Error("error loading location by timezone, using system timezone, error: " + err.Error() + " eventId: " + e.ID)
@@ -81,15 +63,14 @@ func (event *Event) NotifyAtAsTimeObject() (time.Time, error) {
 }
 
 func BuildEvent(ownerId int, chatId, text, timestamp string) (*Event, error) {
-	notifyAt, delta, _ := ParseTimesatmp(timestamp)
 	e, err := (&Event{
 		NewBaseFields(),
 		chatId,
 		ownerId,
 		text,
-		notifyAt,
-		delta,
-	}).Validated()
+		timestamp,
+		"0",
+	}).build()
 
 	if err != nil {
 		return nil, err
@@ -98,30 +79,20 @@ func BuildEvent(ownerId int, chatId, text, timestamp string) (*Event, error) {
 	return e, nil
 }
 
-func ParseTimesatmp(timestamp string) (notifyAt string, delta string, err error) {
-	parts := strings.Split(timestamp, " ")
-	if len(parts) < 3 {
-		return "", "", errors.New("not enough parts for timestamp")
-	}
-
-	notifyAt = parts[0] + " " + parts[1]
-	delta = parts[2]
-
-	return notifyAt, delta, nil
-}
-
-func (e *Event) Validated() (*Event, error) {
+func (e *Event) build() (*Event, error) {
 	month := "01"
 	day := "02"
-	format := fmt.Sprintf("%s.%s.2006 15:04", day, month)
+	format := fmt.Sprintf("%s.%s 15:04", day, month)
 
 	_, err := time.Parse(format, e.NotifyAt)
 
 	if err != nil {
+		slog.Error("build event error: " + err.Error())
 		return nil, err
 	}
 
-	_, found := map[string]int{"h": 1, "d": 1, "w": 1, "m": 1, "y": 1}[e.Delta]
+	// additionaly validate
+	_, found := map[string]int{"0": 1, "h": 1, "d": 1, "w": 1, "m": 1, "y": 1}[e.Delta]
 	if !found {
 		return nil, errors.New("delta format is incorrect")
 	}
@@ -146,11 +117,13 @@ func (e *Event) UpdateNotifyAt() (string, error) {
 		notifyAt = notifyAt.AddDate(0, 1, 0)
 	case "y":
 		notifyAt = notifyAt.AddDate(1, 0, 0)
+	case "0":
+		slog.Debug("delta is zero, notify timestampt not changed")
 	default:
 		slog.Info("delta of value is not supported, notify date is not changed. Delta value:" + e.Delta)
 	}
 
-	e.NotifyAt = notifyAt.Format("02.01.2006 15:04")
+	e.NotifyAt = notifyAt.Format("02.01 15:04")
 
 	return e.NotifyAt, nil
 }
@@ -171,11 +144,4 @@ func (e *Event) DeltaReadable() string {
 		slog.Info("delta of value is not supported, notify date is not changed. Delta value:" + e.Delta)
 		return "неизвестный интервал"
 	}
-}
-
-func (user *User) GetTGUserName() string {
-	if !strings.HasPrefix("@", user.TGusername) {
-		return "@" + user.TGusername
-	}
-	return user.TGusername
 }

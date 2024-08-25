@@ -20,13 +20,13 @@ func CallbackQueryHandler(event telegram.Event) error {
 	slog.Debug("handling callback query, command: " + command)
 
 	if command == "list" {
-		ListEventsCallbackQueryHandler(event)
+		ListItemCallbackQueryHandler(event)
 	}
 	if command == "info" {
 		EventInfoCallbackQueryHandler(event)
 	}
 	if command == "delete" {
-		DeleteEventCallbackQueryHandler(event)
+		DeleteItemCallbackQueryHandler(event)
 	}
 	if command == "conflicts" {
 		CheckConflictsCallbackHandler(event)

@@ -182,3 +182,91 @@ func (event *Event) Delete(ctx context.Context) error {
 
 	return nil
 }
+
+func (s *Schedule) Filter(ctx context.Context) ([]Schedule, error) {
+	where := []string{}
+	if s.OwnerId != 0 {
+		where = append(where, "ownerid=$ownerid")
+	}
+	if s.ID != "" {
+		where = append(where, "id=$id")
+	}
+	if s.Day != "" {
+		where = append(where, "day=$day")
+	}
+
+	where_ := strings.Join(where, " AND ")
+
+	query := `SELECT id, chatid, ownerid, text, delta, day, createdat, updatedat FROM schedule`
+
+	if len(where) != 0 {
+		query += ` WHERE ` + where_
+	}
+
+	query += `;`
+
+	rows, err := sqliteConn.QueryContext(
+		ctx,
+		query,
+		sql.Named("ownerid", s.OwnerId),
+		sql.Named("id", s.ID),
+		sql.Named("day", s.Day),
+	)
+	if err != nil {
+		slog.Error("Error when filtering schedule " + err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+
+	scs := []Schedule{}
+
+	for rows.Next() {
+		sc := Schedule{}
+		err := rows.Scan(
+			&sc.ID,
+			&sc.ChatId,
+			&sc.OwnerId,
+			&sc.Text,
+			&sc.Delta,
+			&sc.Day,
+			&sc.CreatedAt,
+			&sc.UpdatedAt,
+		)
+		if err != nil {
+			slog.Error("Error fetching events by filter params: " + err.Error())
+			continue
+		}
+		scs = append(scs, sc)
+	}
+
+	return scs, nil
+}
+
+// idempotent save
+// accepts ALL fields of entity and save as is
+func (s *Schedule) Save(ctx context.Context) error {
+	_, _, _ = s.RefresTimestamps()
+
+	_, err := sqliteConn.ExecContext(
+		ctx,
+		`INSERT INTO schedule(id, chatid, ownerid, text, delta, startat, createdat, updatedat)
+        VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT(id) DO UPDATE SET chatid=$2, ownerid=$3, text=$4, delta=$5, day=$6, chatid=$7, updatedat=$8
+        RETURNING id;`,
+		&s.ID,
+		&s.ChatId,
+		&s.OwnerId,
+		&s.Text,
+		&s.Delta,
+		&s.Day,
+		&s.CreatedAt,
+		&s.UpdatedAt,
+	)
+	if err != nil {
+		slog.Error("Error when trying to save schedule: " + err.Error())
+		return err
+	}
+	slog.Debug("Schedule created/updated")
+
+	return nil
+}

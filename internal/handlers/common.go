@@ -9,38 +9,34 @@ import (
 	"github.com/meehighlov/eventor/internal/db"
 )
 
-// searches all conflicts in owner's events
-// NOTE: searh by notify date
-// accuracy - one day
-// if found events at the same day - then those events will be return
-func getConflicts(ctx context.Context, eventId string) []db.Event {
-	baseFields := db.BaseFields{ID: eventId}
-	events, err := (&db.Event{BaseFields: baseFields}).Filter(ctx)
+func getConflicts(ctx context.Context, scheduleId string) []db.Schedule {
+	baseFields := db.BaseFields{ID: scheduleId}
+	scs, err := (&db.Schedule{BaseFields: baseFields}).Filter(ctx)
 
 	if err != nil {
 		slog.Error("error occured while searching for conflicts: " + err.Error())
-		return []db.Event{}
+		return []db.Schedule{}
 	}
 
-	if len(events) == 0 {
-		slog.Error("no events for id: " + eventId)
-		return []db.Event{}
+	if len(scs) == 0 {
+		slog.Error("no schedules for id: " + scheduleId)
+		return []db.Schedule{}
 	}
 
-	target := events[0]
+	target := scs[0]
 
-	related_events, err := (&db.Event{OwnerId: target.OwnerId}).Filter(ctx)
+	related_events, err := (&db.Schedule{OwnerId: target.OwnerId}).Filter(ctx)
 	if err != nil {
 		slog.Error("error occured while searching for conflicts, when filtering by owner id: " + err.Error())
-		return []db.Event{}
+		return []db.Schedule{}
 	}
 
-	conflicts := []db.Event{}
+	conflicts := []db.Schedule{}
 	for _, event_ := range related_events {
 		if target.ID == event_.ID {
 			continue
 		}
-		if target.CountDaysToBegin() == event_.CountDaysToBegin() {
+		if target.Day == event_.Day {
 			conflicts = append(conflicts, event_)
 		}
 	}
@@ -48,12 +44,12 @@ func getConflicts(ctx context.Context, eventId string) []db.Event {
 	return conflicts
 }
 
-func buildConflictsMessage(targetId string, conflicts []db.Event) string {
+func buildConflictsMessage(targetId string, conflicts []db.Schedule) string {
 	if len(conflicts) == 0 {
 		return "Конфликтов не обнаружено"
 	}
 
-	var target db.Event
+	var target db.Schedule
 	for _, target_ := range conflicts {
 		if target_.ID == targetId {
 			target = target_
@@ -62,14 +58,12 @@ func buildConflictsMessage(targetId string, conflicts []db.Event) string {
 	}
 
 	metas := []string{
-		"Обнаружены конфликты☝️", "\n",
-		fmt.Sprintf("Событие %s дата %s", target.Text, target.NotifyAt), "\n",
-		"Важно: конфликт обнаружен в дате уведомления",
-		"Обрати внимание на дату события", "\n",
+		"Обнаружены конфликты в расписании☝️", "\n",
+		fmt.Sprintf("Событие %s дата %s", target.Text, target.Day), "\n",
 	}
 
 	for _, c := range conflicts {
-		metas = append(metas, c.Text + " " + c.NotifyAt)
+		metas = append(metas, c.Text + " " + c.Day)
 	}
 
 	msg := strings.Join(metas, "\n")

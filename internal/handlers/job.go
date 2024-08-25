@@ -8,16 +8,28 @@ import (
 
 	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
+	"github.com/meehighlov/eventor/internal/models"
 	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
 const CHECK_TIMEOUT_SEC = 10
 
+
+func buildNotificationButtons(eventId string) [][]map[string]string {
+	return [][]map[string]string{{
+		{
+			"text": "удалить",
+			"callback_data": models.CallDelete(eventId).String(),
+		},
+	},
+	}
+}
+
 func notify(ctx context.Context, client telegram.ApiCaller, events []db.Event, logger *slog.Logger) error {
 	msgTemplate := "🔔 %s"
 	for _, event := range events {
 		msg := fmt.Sprintf(msgTemplate, event.Text)
-		_, err := client.SendMessage(ctx, event.ChatId, msg)
+		_, err := client.SendMessageWithReplyMarkup(ctx, event.ChatId, msg, buildNotificationButtons(event.ID))
 		if err != nil {
 			logger.Error("Notification not sent:" + err.Error())
 		}

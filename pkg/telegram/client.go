@@ -28,6 +28,7 @@ type telegramClient struct {
 
 type ApiCaller interface {
 	SendMessage(context.Context, string, string) (*Message, error)
+	SendMessageWithReplyMarkup(context.Context, string, string, [][]map[string]string) (*Message, error)
 }
 
 type apiCaller interface {
