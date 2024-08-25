@@ -46,6 +46,12 @@ func ScheduleInfoCallbackQueryHandler(event telegram.Event) error {
 	markup := [][]map[string]string{
 		{
 			{
+				"text": "конфликты",
+				"callback_data": models.CallConflicts(params.Id).String(),
+			},
+		},
+		{
+			{
 				"text": "к списку",
 				"callback_data": models.CallList(params.Pagination.Offset, "<", sc.Name()).String(),
 			},
