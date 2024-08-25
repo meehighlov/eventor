@@ -23,9 +23,9 @@ func getConflicts(ctx context.Context, scheduleId string) []db.Schedule {
 		return []db.Schedule{}
 	}
 
-	target := scs[0]
+	target := scs[0].(db.Schedule)
 
-	related_events, err := (&db.Schedule{OwnerId: target.OwnerId}).Filter(ctx)
+	related_events, err := (&db.Schedule{OwnerId: target.OwnerId, Day: target.Day}).Filter(ctx)
 	if err != nil {
 		slog.Error("error occured while searching for conflicts, when filtering by owner id: " + err.Error())
 		return []db.Schedule{}
@@ -33,12 +33,10 @@ func getConflicts(ctx context.Context, scheduleId string) []db.Schedule {
 
 	conflicts := []db.Schedule{}
 	for _, event_ := range related_events {
-		if target.ID == event_.ID {
+		if target.ID == event_.Id() {
 			continue
 		}
-		if target.Day == event_.Day {
-			conflicts = append(conflicts, event_)
-		}
+		conflicts = append(conflicts, event_.(db.Schedule))
 	}
 
 	return conflicts

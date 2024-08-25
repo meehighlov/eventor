@@ -41,7 +41,7 @@ func (e Event) Compare() int {
 		slog.Error("error loading location by timezone, using system timezone, error: " + err.Error() + " eventId: " + e.ID)
 	}
 	now := time.Now().In(location)
-	notify, err := time.Parse("02.01.2006 15:04", e.NotifyAt)
+	notify, err := time.Parse("02.01 15:04", e.NotifyAt)
 	if err != nil {
 		slog.Error("error parsing notify during count days to event begining: " + err.Error())
 		return -1
@@ -54,7 +54,7 @@ func (e Event) Compare() int {
 }
 
 func (event *Event) NotifyAtAsTimeObject() (time.Time, error) {
-	notifyAt, err := time.Parse("02.01.2006 15:04", event.NotifyAt)
+	notifyAt, err := time.Parse("02.01 15:04", event.NotifyAt)
 	if err != nil {
 		return time.Now(), err
 	}
@@ -140,6 +140,8 @@ func (e *Event) DeltaReadable() string {
 		return "раз в месяц"
 	case "y":
 		return "раз в год"
+	case "0":
+		return "без повторений"
 	default:
 		slog.Info("delta of value is not supported, notify date is not changed. Delta value:" + e.Delta)
 		return "неизвестный интервал"

@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"log/slog"
 	"strings"
+
+	"github.com/meehighlov/eventor/internal/common"
 )
 
 // idempotent save
@@ -111,7 +113,7 @@ func (e *Event) Save(ctx context.Context) error {
 	return nil
 }
 
-func (event *Event) Filter(ctx context.Context) ([]Event, error) {
+func (event Event) Filter(ctx context.Context) ([]common.Item, error) {
 	where := []string{}
 
 	if event.OwnerId != 0 {
@@ -143,7 +145,7 @@ func (event *Event) Filter(ctx context.Context) ([]Event, error) {
 	}
 	defer rows.Close()
 
-	events := []Event{}
+	events := []common.Item{}
 
 	for rows.Next() {
 		event := Event{}
@@ -167,7 +169,7 @@ func (event *Event) Filter(ctx context.Context) ([]Event, error) {
 	return events, nil
 }
 
-func (event *Event) Delete(ctx context.Context) error {
+func (event Event) Delete(ctx context.Context) error {
 	_, err := sqliteConn.ExecContext(
 		ctx,
 		`DELETE FROM event WHERE id = $1;`,
@@ -183,7 +185,7 @@ func (event *Event) Delete(ctx context.Context) error {
 	return nil
 }
 
-func (s *Schedule) Filter(ctx context.Context) ([]Schedule, error) {
+func (s Schedule) Filter(ctx context.Context) ([]common.Item, error) {
 	where := []string{}
 	if s.OwnerId != 0 {
 		where = append(where, "ownerid=$ownerid")
@@ -197,7 +199,7 @@ func (s *Schedule) Filter(ctx context.Context) ([]Schedule, error) {
 
 	where_ := strings.Join(where, " AND ")
 
-	query := `SELECT id, chatid, ownerid, text, delta, day, createdat, updatedat FROM schedule`
+	query := `SELECT id, chatid, ownerid, text, delta, day, eventId, createdat, updatedat FROM schedule`
 
 	if len(where) != 0 {
 		query += ` WHERE ` + where_
@@ -218,7 +220,7 @@ func (s *Schedule) Filter(ctx context.Context) ([]Schedule, error) {
 	}
 	defer rows.Close()
 
-	scs := []Schedule{}
+	scs := []common.Item{}
 
 	for rows.Next() {
 		sc := Schedule{}
@@ -229,6 +231,7 @@ func (s *Schedule) Filter(ctx context.Context) ([]Schedule, error) {
 			&sc.Text,
 			&sc.Delta,
 			&sc.Day,
+			&sc.EventId,
 			&sc.CreatedAt,
 			&sc.UpdatedAt,
 		)
@@ -249,9 +252,9 @@ func (s *Schedule) Save(ctx context.Context) error {
 
 	_, err := sqliteConn.ExecContext(
 		ctx,
-		`INSERT INTO schedule(id, chatid, ownerid, text, delta, startat, createdat, updatedat)
-        VALUES($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT(id) DO UPDATE SET chatid=$2, ownerid=$3, text=$4, delta=$5, day=$6, chatid=$7, updatedat=$8
+		`INSERT INTO schedule(id, chatid, ownerid, text, delta, day, eventId, createdat, updatedat)
+        VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        ON CONFLICT(id) DO UPDATE SET chatid=$2, ownerid=$3, text=$4, delta=$5, day=$6, eventId=$7, chatid=$8, updatedat=$9
         RETURNING id;`,
 		&s.ID,
 		&s.ChatId,
@@ -259,6 +262,7 @@ func (s *Schedule) Save(ctx context.Context) error {
 		&s.Text,
 		&s.Delta,
 		&s.Day,
+		&s.EventId,
 		&s.CreatedAt,
 		&s.UpdatedAt,
 	)
@@ -267,6 +271,22 @@ func (s *Schedule) Save(ctx context.Context) error {
 		return err
 	}
 	slog.Debug("Schedule created/updated")
+
+	return nil
+}
+
+func (s Schedule) Delete(ctx context.Context) error {
+	_, err := sqliteConn.ExecContext(
+		ctx,
+		`DELETE FROM schedule WHERE id = $1;`,
+		&s.ID,
+	)
+	if err != nil {
+		slog.Error("Error when trying to delete schedule row: " + err.Error())
+		return err
+	}
+
+	slog.Debug("Schedule row deleted")
 
 	return nil
 }

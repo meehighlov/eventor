@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS schedule (
     text VARCHAR,
     delta VARCHAR,
     day VARCHAR,
+    eventId VARCHAR,
     createdat VARCHAR,
     updatedat VARCHAR
 )

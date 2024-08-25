@@ -19,7 +19,7 @@ func buildNotificationButtons(eventId string) [][]map[string]string {
 	return [][]map[string]string{{
 		{
 			"text": "удалить",
-			"callback_data": models.CallDelete(eventId).String(),
+			"callback_data": models.CallDelete(eventId, "event").String(),
 		},
 	},
 	}
@@ -58,8 +58,20 @@ func run(ctx context.Context, client telegram.ApiCaller, logger *slog.Logger, cf
 		notifyList := []db.Event{}
 
 		for _, event := range events {
-			if event.NotifyAt == date {
-				notifyList = append(notifyList, event)
+			event_, ok := event.(db.Event)
+
+			if !ok {
+				errMsg := "cannot cast Item to Event in background job for checking events"
+				logger.Error(errMsg)
+				_, err := client.SendMessage(context.Background(), cfg.ReportChatId, errMsg)
+				if err != nil {
+					logger.Error("error sending report message: " + errMsg)
+				}
+				continue
+			}
+
+			if event_.NotifyAt == date {
+				notifyList = append(notifyList, event_)
 			}
 		}
 
@@ -89,8 +101,7 @@ func RunEventPoller(
 
 			logger.Error(errMsg)
 
-			reportChatId := cfg.ReportChatId
-			_, err := client.SendMessage(context.Background(), reportChatId, errMsg)
+			_, err := client.SendMessage(context.Background(), cfg.ReportChatId, errMsg)
 			if err != nil {
 				logger.Error("panic report error:" + err.Error())
 			}

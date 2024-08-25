@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strconv"
@@ -19,11 +20,11 @@ type Item interface {
 	Compare() int
 	Info() string
 	Name() string
-	// Delete(context.Context) error
-	// Filter(context.Context) ([]Item, error)
+	Delete(context.Context) error
+	Filter(context.Context) ([]Item, error)
 }
 
-func buildPagiButtons(total, limit, offset int) [][]map[string]string {
+func buildPagiButtons(total, limit, offset int, entity string) [][]map[string]string {
 	if total == 0 {
 		return [][]map[string]string{}
 	}
@@ -31,26 +32,26 @@ func buildPagiButtons(total, limit, offset int) [][]map[string]string {
 		return [][]map[string]string{{
 			{
 				"text": "свернуть",
-				"callback_data": models.CallList(strconv.Itoa(LIST_START_OFFSET), "<<<").String(),
+				"callback_data": models.CallList(strconv.Itoa(LIST_START_OFFSET), "<<<", entity).String(),
 			},
 		}}
 	}
 	var keyBoard []map[string]string
 	if offset + limit >= total {
-		previousButton := map[string]string{"text": "назад", "callback_data": models.CallList(strconv.Itoa(offset), "<<").String()}
+		previousButton := map[string]string{"text": "назад", "callback_data": models.CallList(strconv.Itoa(offset), "<<", entity).String()}
 		keyBoard = []map[string]string{previousButton}
 	} else {
 		if offset == 0 {
-			nextButton := map[string]string{"text": "вперед", "callback_data": models.CallList(strconv.Itoa(offset), ">>").String()}
+			nextButton := map[string]string{"text": "вперед", "callback_data": models.CallList(strconv.Itoa(offset), ">>", entity).String()}
 			keyBoard = []map[string]string{nextButton}
 		} else {
-			nextButton := map[string]string{"text": "вперед", "callback_data": models.CallList(strconv.Itoa(offset), ">>").String()}
-			previousButton := map[string]string{"text": "назад", "callback_data": models.CallList(strconv.Itoa(offset), "<<").String()}
+			nextButton := map[string]string{"text": "вперед", "callback_data": models.CallList(strconv.Itoa(offset), ">>", entity).String()}
+			previousButton := map[string]string{"text": "назад", "callback_data": models.CallList(strconv.Itoa(offset), "<<", entity).String()}
 			keyBoard = []map[string]string{previousButton, nextButton}
 		}
 	}
 
-	allButton := map[string]string{"text": fmt.Sprintf("показать все (%d)", total), "callback_data": models.CallList(strconv.Itoa(offset), "<>").String()}
+	allButton := map[string]string{"text": fmt.Sprintf("показать все (%d)", total), "callback_data": models.CallList(strconv.Itoa(offset), "<>", entity).String()}
 	allButtonBar := []map[string]string{allButton}
 
 	markup := [][]map[string]string{}
@@ -78,7 +79,7 @@ func buildListButtons[T Item](items []T, limit, offset int) []map[string]string 
 		}
 		button := map[string]string{
 			"text": item.Info(),
-			"callback_data": models.CallInfo(item.Id(), strconv.Itoa(offset)).String(),
+			"callback_data": models.CallInfo(item.Id(), strconv.Itoa(offset), item.Name()).String(),
 		}
 		buttons = append(buttons, button)
 	}
@@ -86,7 +87,7 @@ func buildListButtons[T Item](items []T, limit, offset int) []map[string]string 
 	return buttons
 }
 
-func BuildItemListMarkup[T Item](items []T, limit, offset int, direction string) [][]map[string]string {
+func BuildItemListMarkup[T Item](items []T, limit, offset int, direction, entity string) [][]map[string]string {
 	newOffset := offset
 	if direction == "<" {
 
@@ -105,7 +106,7 @@ func BuildItemListMarkup[T Item](items []T, limit, offset int, direction string)
 	}
 
 	itemsListAsButtons := buildListButtons(items, limit, newOffset)
-	pagiButtons := buildPagiButtons(len(items), limit, newOffset)
+	pagiButtons := buildPagiButtons(len(items), limit, newOffset, entity)
 
 	markup := [][]map[string]string{}
 

@@ -12,7 +12,7 @@ import (
 	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
-func EventInfoCallbackQueryHandler(event telegram.Event) error {
+func ScheduleInfoCallbackQueryHandler(event telegram.Event) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
 	defer cancel()
 
@@ -20,19 +20,14 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 	params := models.CallbackFromString(callbackQuery.Data)
 
 	baseFields := db.BaseFields{ID: params.Id}
-	events, err := (&db.Event{BaseFields: baseFields}).Filter(ctx)
+	scs, err := (&db.Schedule{BaseFields: baseFields}).Filter(ctx)
 
 	if err != nil {
 		slog.Error("error during fetching event info: " + err.Error())
 		return nil
 	}
 
-	if len(events) == 0 {
-		event.EditCalbackMessage(ctx, "непредвиденная ошибка: события не найдены", [][]map[string]string{})
-		return nil
-	}
-
-	event_, ok := events[0].(db.Event)
+	sc, ok := scs[0].(db.Schedule)
 	if !ok {
 		slog.Error("cast from Item to Event error")
 		event.EditCalbackMessage(ctx, "непредвиденная ошибка", [][]map[string]string{})
@@ -41,9 +36,9 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 
 	msg := strings.Join(
 		[]string{
-			fmt.Sprintf("💬 %s", event_.Text),
-			fmt.Sprintf("🔔 %s", event_.NotifyAt),
-			fmt.Sprintf("🔁 %s", event_.DeltaReadable()),
+			fmt.Sprintf("💬 %s", sc.Text),
+			fmt.Sprintf("🔔 %s", sc.DeltaReadable()),
+			fmt.Sprintf("🔁 %s", sc.Day),
 		},
 		"\n\n",
 	)
@@ -52,15 +47,25 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 		{
 			{
 				"text": "к списку",
-				"callback_data": models.CallList(params.Pagination.Offset, "<", "event").String(),
+				"callback_data": models.CallList(params.Pagination.Offset, "<", sc.Name()).String(),
 			},
 		},
 		{
 			{
 				"text": "удалить",
-				"callback_data": models.CallDelete(params.Id, "event").String(),
+				"callback_data": models.CallDelete(params.Id, sc.Name()).String(),
 			},
 		},
+	}
+
+	if !sc.HasNotifications() {
+		btn := []map[string]string{
+			{
+				"text": "напомнить",
+				"callback_data": models.CallCreateEventForSchedule(sc.Id()).String(),
+			},
+		}
+		markup = append(markup, btn)
 	}
 
 	event.EditCalbackMessage(ctx, msg, markup)

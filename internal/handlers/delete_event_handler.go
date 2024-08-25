@@ -40,7 +40,7 @@ func DeleteItemCallbackQueryHandler(event telegram.Event) error {
 		{
 			{
 				"text": "к списку",
-				"callback_data": models.CallList(strconv.Itoa(common.LIST_START_OFFSET), "<").String(),
+				"callback_data": models.CallList(strconv.Itoa(common.LIST_START_OFFSET), "<", "event").String(),
 			},
 		},
 	}

@@ -57,7 +57,7 @@ func scheduleSave(event telegram.Event) (int, error) {
 	return -1, nil
 }
 
-func ScheduleHandler() map[int]telegram.CommandStepHandler {
+func AddScheduleHandler() map[int]telegram.CommandStepHandler {
 	return map[int]telegram.CommandStepHandler{
 		1: scheduleEntry,
 		2: scheduleAcceptTimestamp,

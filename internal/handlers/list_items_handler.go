@@ -12,6 +12,48 @@ import (
 	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
+const (
+	HEADER_MESSAGE_LIST_NOT_EMPTY = "Нажми, чтобы узнать детали✨"
+	HEADER_MESSAGE_LIST_IS_EMPTY = "Записей пока нет✨"
+)
+
+func ListEntityHandler(entity string) telegram.CommandHandler {
+	return func (event telegram.Event) error {
+		ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
+		defer cancel()
+	
+		message := event.GetMessage()
+
+		items, err := (buildItem(entity, message.From.Id)).Filter(ctx)
+	
+		if err != nil {
+			slog.Error("Error fetching items: " + err.Error())
+			return nil
+		}
+	
+		if len(items) == 0 {
+			event.Reply(ctx, HEADER_MESSAGE_LIST_IS_EMPTY)
+			return nil
+		}
+	
+		event.ReplyWithKeyboard(
+			ctx,
+			HEADER_MESSAGE_LIST_NOT_EMPTY,
+			common.BuildItemListMarkup(
+				items,
+				common.LIST_LIMIT,
+				common.LIST_START_OFFSET,
+				"<",
+				entity,
+			),
+		)
+	
+		return nil
+	}	
+}
+
+// ----------------------------------------------- List items for CallbackQuery ---------------------------------------------------
+
 func ListItemCallbackQueryHandler(event telegram.Event) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
 	defer cancel()
@@ -27,22 +69,13 @@ func ListItemCallbackQueryHandler(event telegram.Event) error {
 		return err
 	}
 
-	items, err := (&db.Event{OwnerId: callbackQuery.From.Id}).Filter(ctx)
-	if err != nil {
-		slog.Error("Error fetching items: " + err.Error())
-		return nil
-	}
-
-	markup := common.BuildItemListMarkup(
-		items,
-		common.LIST_LIMIT,
-		offset_,params.Pagination.Direction,
+	msg, markup := buildResponse(
+		ctx,
+		params.Entity,
+		callbackQuery.From.Id,
+		offset_,
+		params.Pagination.Direction,
 	)
-
-	msg := HEADER_MESSAGE_LIST_NOT_EMPTY
-	if len(items) == 0 {
-		msg = HEADER_MESSAGE_LIST_IS_EMPTY
-	}
 
 	event.EditCalbackMessage(
 		ctx,
@@ -51,4 +84,45 @@ func ListItemCallbackQueryHandler(event telegram.Event) error {
 	)
 
 	return nil
+}
+
+func buildResponse(
+	ctx context.Context,
+	entity string,
+	ownerId int,
+	offset int,
+	direction string,
+) (string, [][]map[string]string) {
+	hideMarkup := [][]map[string]string{}
+	var msgByItemsLen = func(itemsLen int) string {
+		msg := HEADER_MESSAGE_LIST_NOT_EMPTY
+		if itemsLen == 0 {
+			msg = HEADER_MESSAGE_LIST_IS_EMPTY
+		}
+		return msg
+	}
+
+	items, err := buildItem(entity, ownerId).Filter(ctx)
+	if err != nil {
+		slog.Error("Error fetching items: " + err.Error())
+		return "Не могу разобрать запрос", hideMarkup
+	}
+	return msgByItemsLen(len(items)), common.BuildItemListMarkup(
+		items,
+		common.LIST_LIMIT,
+		offset,
+		direction,
+		entity,
+	)
+}
+
+func buildItem(entity string, ownerId int) common.Item {
+	var item common.Item
+	if entity == "event" {
+		item = db.Event{OwnerId: ownerId}
+	}
+	if entity == "schedule" {
+		item = db.Schedule{OwnerId: ownerId}
+	}
+	return item
 }

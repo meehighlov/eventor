@@ -15,21 +15,29 @@ func CallbackQueryHandler(event telegram.Event) error {
 
 	event.AnswerCallbackQuery(ctx)
 
-	command := models.CallbackFromString(event.GetCallbackQuery().Data).Command
+	params := models.CallbackFromString(event.GetCallbackQuery().Data)
 
-	slog.Debug("handling callback query, command: " + command)
+	slog.Debug("handling callback query, command: " + params.Command + " entity: " + params.Entity)
+
+	command := params.Command
 
 	if command == "list" {
 		ListItemCallbackQueryHandler(event)
 	}
-	if command == "info" {
+	if command == "info_event" {
 		EventInfoCallbackQueryHandler(event)
+	}
+	if command == "info_schedule" {
+		ScheduleInfoCallbackQueryHandler(event)
 	}
 	if command == "delete" {
 		DeleteItemCallbackQueryHandler(event)
 	}
 	if command == "conflicts" {
 		CheckConflictsCallbackHandler(event)
+	}
+	if command == "event_for_sc" {
+		CreateEventForSchedulerHandler(event)
 	}
 	return nil
 }

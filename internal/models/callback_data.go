@@ -16,20 +16,24 @@ type CallbackDataModel struct {
 	Entity     string
 }
 
-func CallList(offset, direction string) *CallbackDataModel {
-	return newCallback("list", "", offset, direction, "event")
+func CallList(offset, direction, entity string) *CallbackDataModel {
+	return newCallback("list", "", offset, direction, entity)
 }
 
-func CallDelete(id string) *CallbackDataModel {
+func CallDelete(id, entity string) *CallbackDataModel {
 	return newCallback("delete", id, "", "", "event")
 }
 
-func CallInfo(id, offset string) *CallbackDataModel {
-	return newCallback("info", id, offset, "", "event")
+func CallInfo(id, offset, entity string) *CallbackDataModel {
+	return newCallback("info_"+entity, id, offset, "", entity)
 }
 
 func CallConflicts(id string) *CallbackDataModel {
-	return newCallback("conflicts", id, "0", "", "event")
+	return newCallback("conflicts", id, "0", "", "schedule")
+}
+
+func CallCreateEventForSchedule(id string) *CallbackDataModel {
+	return newCallback("event_for_sc", id, "0", "", "schedule")
 }
 
 func newCallback(command, id, offset, direction, entity string) *CallbackDataModel {

@@ -24,8 +24,10 @@ func main() {
 
 	bot.RegisterCommandHandler("/start", auth.Auth(handlers.StartHandler))
 	bot.RegisterCommandHandler("/commands", auth.Auth(handlers.CommandsHandler))
-	bot.RegisterCommandHandler("/add", auth.Auth(telegram.FSM(handlers.AddEventHandler())))
-	bot.RegisterCommandHandler("/list", auth.Auth(handlers.ListEventsHandler))
+	bot.RegisterCommandHandler("/add_event", auth.Auth(telegram.FSM(handlers.AddEventHandler())))
+	bot.RegisterCommandHandler("/events", auth.Auth(handlers.ListEntityHandler("event")))
+	bot.RegisterCommandHandler("/schedule", auth.Auth(handlers.ListEntityHandler("schedule")))
+	bot.RegisterCommandHandler("/add_schedule", auth.Auth(telegram.FSM(handlers.AddScheduleHandler())))
 
 	bot.RegisterCallbackQueryHandler(handlers.CallbackQueryHandler)
 
