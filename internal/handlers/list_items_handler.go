@@ -49,7 +49,7 @@ func ListEntityHandler(entity string) telegram.CommandHandler {
 		)
 	
 		return nil
-	}	
+	}
 }
 
 // ----------------------------------------------- List items for CallbackQuery ---------------------------------------------------
@@ -120,9 +120,6 @@ func buildItem(entity string, ownerId int) common.Item {
 	var item common.Item
 	if entity == "event" {
 		item = db.Event{OwnerId: ownerId}
-	}
-	if entity == "schedule" {
-		item = db.Schedule{OwnerId: ownerId}
 	}
 	return item
 }

@@ -28,12 +28,8 @@ func CallInfo(id, offset, entity string) *CallbackDataModel {
 	return newCallback("info_"+entity, id, offset, "", entity)
 }
 
-func CallConflicts(id string) *CallbackDataModel {
-	return newCallback("conflicts", id, "0", "", "schedule")
-}
-
-func CallCreateEventForSchedule(id string) *CallbackDataModel {
-	return newCallback("event_for_sc", id, "0", "", "schedule")
+func CallNextDelta(id, offset string) *CallbackDataModel {
+	return newCallback("next_delta", id, offset, "", "event")
 }
 
 func newCallback(command, id, offset, direction, entity string) *CallbackDataModel {
