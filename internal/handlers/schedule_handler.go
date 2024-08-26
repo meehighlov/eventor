@@ -41,13 +41,16 @@ func scheduleSave(event telegram.Event) (int, error) {
 
 	message := event.GetMessage()
 
-	s := db.NewSchedule(
+	s, err := db.BuildSchedule(
 		message.From.Id,
 		message.GetChatIdStr(),
 		eventText,
-		"d",
 		timestamp,
 	)
+
+	if err != nil {
+		event.Reply(ctx, "ошибка обновления расписания:" + err.Error())
+	}
 
 	s.Save(ctx)
 

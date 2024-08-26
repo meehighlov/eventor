@@ -36,6 +36,18 @@ func DeleteItemCallbackQueryHandler(event telegram.Event) error {
 
 	event_.Delete(ctx)
 
+	sc, err := (&db.Schedule{EventId: event_.Id()}).Filter(ctx)
+	if err != nil {
+		if len(sc) != 0 {
+			sc_ := sc[0].(db.Schedule)
+			_ = sc_.UnboundEvent()
+			sc_.Save(ctx)
+		}
+	} else {
+		slog.Error("unbound schedule error:" + err.Error())
+		event.ReplyCallbackQuery(ctx, "не удалось отвязать от расписания: " + sc[0].Info())
+	}
+
 	markup := [][]map[string]string{
 		{
 			{

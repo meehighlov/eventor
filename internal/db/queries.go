@@ -199,7 +199,7 @@ func (s Schedule) Filter(ctx context.Context) ([]common.Item, error) {
 
 	where_ := strings.Join(where, " AND ")
 
-	query := `SELECT id, chatid, ownerid, text, delta, day, eventId, createdat, updatedat FROM schedule`
+	query := `SELECT id, chatid, ownerid, text, delta, day, eventId, timestamp, createdat, updatedat FROM schedule`
 
 	if len(where) != 0 {
 		query += ` WHERE ` + where_
@@ -232,6 +232,7 @@ func (s Schedule) Filter(ctx context.Context) ([]common.Item, error) {
 			&sc.Delta,
 			&sc.Day,
 			&sc.EventId,
+			&sc.Timestamp,
 			&sc.CreatedAt,
 			&sc.UpdatedAt,
 		)
@@ -252,9 +253,9 @@ func (s *Schedule) Save(ctx context.Context) error {
 
 	_, err := sqliteConn.ExecContext(
 		ctx,
-		`INSERT INTO schedule(id, chatid, ownerid, text, delta, day, eventId, createdat, updatedat)
-        VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        ON CONFLICT(id) DO UPDATE SET chatid=$2, ownerid=$3, text=$4, delta=$5, day=$6, eventId=$7, chatid=$8, updatedat=$9
+		`INSERT INTO schedule(id, chatid, ownerid, text, delta, day, eventId, timestamp, createdat, updatedat)
+        VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        ON CONFLICT(id) DO UPDATE SET chatid=$2, ownerid=$3, text=$4, delta=$5, day=$6, eventId=$7, timestamp=$8, chatid=$9, updatedat=$10
         RETURNING id;`,
 		&s.ID,
 		&s.ChatId,
@@ -263,6 +264,7 @@ func (s *Schedule) Save(ctx context.Context) error {
 		&s.Delta,
 		&s.Day,
 		&s.EventId,
+		&s.Timestamp,
 		&s.CreatedAt,
 		&s.UpdatedAt,
 	)

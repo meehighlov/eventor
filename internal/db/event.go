@@ -62,14 +62,14 @@ func (event *Event) NotifyAtAsTimeObject() (time.Time, error) {
 	return notifyAt, err
 }
 
-func BuildEvent(ownerId int, chatId, text, timestamp string) (*Event, error) {
+func BuildEvent(ownerId int, chatId, text, timestamp, delta string) (*Event, error) {
 	e, err := (&Event{
 		NewBaseFields(),
 		chatId,
 		ownerId,
 		text,
 		timestamp,
-		"0",
+		delta,
 	}).build()
 
 	if err != nil {

@@ -30,17 +30,23 @@ func CreateEventForSchedulerHandler(event telegram.Event) error {
 
 	sc := scs[0].(db.Schedule)
 
+	if sc.HasNotifications() {
+		event.ReplyCallbackQuery(ctx, "напоминание для " + sc.Text + " уже создано")
+		return nil
+	}
+
 	message := callbackQuery.Message
 
 	e, err := db.BuildEvent(
 		message.From.Id,
 		message.GetChatIdStr(),
 		sc.Text,
-		"26.08 00:53", // todo
+		sc.BuildNotifyAt(),
+		sc.Delta,
 	)
 
 	if err != nil {
-		event.ReplyCallbackQuery(ctx, "ошибка создания напоминания " + err.Error())
+		event.ReplyCallbackQuery(ctx, "ошибка создания напоминания для " + sc.Info() +  " " + err.Error())
 		return nil
 	}
 
