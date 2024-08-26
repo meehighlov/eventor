@@ -27,3 +27,4 @@ go.work.sum
 *.log
 .idea
 .DS_Store
+*debug*

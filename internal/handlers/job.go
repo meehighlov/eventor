@@ -51,7 +51,7 @@ func run(ctx context.Context, client telegram.ApiCaller, logger *slog.Logger, cf
 
 	for {
 		// todo move datetime format to utils 
-		date := time.Now().In(location).Format("02.01.2006 15:04")
+		date := time.Now().In(location).Format("02.01 15:04")
 
 		events, err := (&db.Event{}).Filter(ctx)
 

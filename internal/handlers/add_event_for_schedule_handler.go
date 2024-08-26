@@ -41,11 +41,12 @@ func CreateEventForSchedulerHandler(event telegram.Event) error {
 		message.From.Id,
 		message.GetChatIdStr(),
 		sc.Text,
-		"26.08 00:53", // todo
+		sc.BuildNotifyAt(),
+		sc.Delta,
 	)
 
 	if err != nil {
-		event.ReplyCallbackQuery(ctx, "ошибка создания напоминания " + err.Error())
+		event.ReplyCallbackQuery(ctx, "ошибка создания напоминания для " + sc.Info() +  " " + err.Error())
 		return nil
 	}
 

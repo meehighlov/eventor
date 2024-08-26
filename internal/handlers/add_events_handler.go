@@ -46,6 +46,7 @@ func addEventSave(event telegram.Event) (int, error) {
 		message.GetChatIdStr(),
 		eventText,
 		timestamp,
+		"0", // no repeat
 	)
 
 	if err != nil {
