@@ -128,8 +128,8 @@ func (e *Event) UpdateNotifyAt() (string, error) {
 	return e.NotifyAt, nil
 }
 
-func (e *Event) DeltaReadable() string {
-	switch e.Delta {
+func deltaReadable(delta string) string {
+	switch delta {
 	case "h":
 		return "раз в час"
 	case "d":
@@ -143,7 +143,36 @@ func (e *Event) DeltaReadable() string {
 	case "0":
 		return "без повторений"
 	default:
-		slog.Info("delta of value is not supported, notify date is not changed. Delta value:" + e.Delta)
+		slog.Info("delta of value is not supported, notify date is not changed. Delta value:" + delta)
 		return "неизвестный интервал"
 	}
+}
+
+func (e *Event) DeltaReadable() string {
+	return deltaReadable(e.Delta)
+}
+
+func (e *Event) NextDelta(asReadable bool) string {
+	default_ := "0"
+	currentToNext := map[string]string{
+		"h": "d",
+		"d": "w",
+		"w": "m",
+		"m": "y",
+		"y": "0",
+		"0": "h",
+	}
+	next, found := currentToNext[e.Delta]
+	if !found {
+		slog.Error("not next delta by current: " + e.Delta + " returning " + default_)
+		if asReadable {
+			return deltaReadable(default_)
+		}
+		return default_
+	}
+
+	if asReadable {
+		return deltaReadable(next)
+	}
+	return next
 }

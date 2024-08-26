@@ -39,6 +39,15 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 		return nil
 	}
 
+	if params.Command == "next_delta" {
+		event_.Delta = event_.NextDelta(false)
+		err := event_.Save(ctx)
+		if err != nil {
+			slog.Error("error nexting delta: " + err.Error())
+			event.ReplyCallbackQuery(ctx, "не удалось обновить повтор")
+		}
+	}
+
 	msg := strings.Join(
 		[]string{
 			fmt.Sprintf("💬 %s", event_.Text),
@@ -49,6 +58,12 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 	)
 
 	markup := [][]map[string]string{
+		{
+			{
+				"text": event_.NextDelta(true),
+				"callback_data": models.CallNextDelta(params.Id, params.Pagination.Offset).String(),
+			},
+		},
 		{
 			{
 				"text": "к списку",

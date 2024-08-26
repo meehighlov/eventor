@@ -15,9 +15,7 @@ func CommandsHandler(event telegram.Event) error {
 	commands := []string{
 		"Это список моих команд🙌\n",
 		"/events - события",
-		"/add_event - добавить новое событие",
-		"/add_schedule - обновить расписание",
-		"/schedule - расписание",
+		"/add - добавить новое событие",
 	}
 
 	msg := strings.Join(commands, "\n")

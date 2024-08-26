@@ -24,20 +24,11 @@ func CallbackQueryHandler(event telegram.Event) error {
 	if command == "list" {
 		ListItemCallbackQueryHandler(event)
 	}
-	if command == "info_event" {
+	if command == "info_event" || command == "next_delta" {
 		EventInfoCallbackQueryHandler(event)
-	}
-	if command == "info_schedule" {
-		ScheduleInfoCallbackQueryHandler(event)
 	}
 	if command == "delete" {
 		DeleteItemCallbackQueryHandler(event)
-	}
-	if command == "conflicts" {
-		CheckConflictsCallbackHandler(event)
-	}
-	if command == "event_for_sc" {
-		CreateEventForSchedulerHandler(event)
 	}
 	return nil
 }

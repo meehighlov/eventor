@@ -1,15 +1,15 @@
-# grats
+# eventor
 
 ## Запуск
 
-1. создаем .env файл и добавляем его в /cmd (пример .env.example)
+1. создаем .env файл
 2. запускаем миграции
    - устанавливаем goose, например: brew install goose
-   - из каталога /cmd запускаем команду
+   - запускакем
    ```shell
-   goose -dir=../../migrations sqlite3 eventor.db up
+   make migrate
    ```
-3. запускаем бота из каталога /cmd:
+3. запускаем бота:
    ```shell
-   go run main.go
+   make run
    ```
