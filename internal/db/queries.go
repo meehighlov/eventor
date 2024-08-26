@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"log/slog"
 	"strings"
-
-	"github.com/meehighlov/eventor/internal/common"
 )
 
 // idempotent save
@@ -86,7 +84,7 @@ func (user *User) Filter(ctx context.Context) ([]User, error) {
 
 // idempotent save
 // accepts ALL fields of entity and save as is
-func (e *Event) Save(ctx context.Context) error {
+func (e Event) Save(ctx context.Context) error {
 	_, _, _ = e.RefresTimestamps()
 
 	_, err := sqliteConn.ExecContext(
@@ -113,7 +111,7 @@ func (e *Event) Save(ctx context.Context) error {
 	return nil
 }
 
-func (event Event) Filter(ctx context.Context) ([]common.Item, error) {
+func (event Event) Filter(ctx context.Context) ([]Entity, error) {
 	where := []string{}
 
 	if event.OwnerId != 0 {
@@ -145,7 +143,7 @@ func (event Event) Filter(ctx context.Context) ([]common.Item, error) {
 	}
 	defer rows.Close()
 
-	events := []common.Item{}
+	events := []Entity{}
 
 	for rows.Next() {
 		event := Event{}
