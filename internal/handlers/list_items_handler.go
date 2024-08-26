@@ -116,8 +116,8 @@ func buildResponse(
 	)
 }
 
-func buildItem(entity string, ownerId int) common.Item {
-	var item common.Item
+func buildItem(entity string, ownerId int) db.Entity {
+	var item db.Entity
 	if entity == "event" {
 		item = db.Event{OwnerId: ownerId}
 	}

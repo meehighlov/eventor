@@ -1,10 +1,21 @@
 package db
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+type Entity interface {
+	Id() string
+	Compare() int
+	Info() string
+	Name() string
+	Save(context.Context) error
+	Delete(context.Context) error
+	Filter(context.Context) ([]Entity, error)
+}
 
 type BaseFields struct {
 	ID        string

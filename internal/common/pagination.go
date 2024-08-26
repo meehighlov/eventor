@@ -1,7 +1,6 @@
 package common
 
 import (
-	"context"
 	"fmt"
 	"sort"
 	"strconv"
@@ -20,8 +19,6 @@ type Item interface {
 	Compare() int
 	Info() string
 	Name() string
-	Delete(context.Context) error
-	Filter(context.Context) ([]Item, error)
 }
 
 func buildPagiButtons(total, limit, offset int, entity string) [][]map[string]string {
