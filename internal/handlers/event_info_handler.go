@@ -48,15 +48,6 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 		}
 	}
 
-	msg := strings.Join(
-		[]string{
-			fmt.Sprintf("💬 %s", event_.Text),
-			fmt.Sprintf("🔔 %s", event_.NotifyAt),
-			fmt.Sprintf("🔁 %s", event_.DeltaReadable()),
-		},
-		"\n\n",
-	)
-
 	markup := [][]map[string]string{
 		{
 			{
@@ -77,6 +68,23 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 			},
 		},
 	}
+
+	msgRows := []string{
+		fmt.Sprintf("💬 %s", event_.Text),
+	}
+
+	if event_.NotifyNeeded() {
+		msgRows = append(msgRows, fmt.Sprintf("🔔 %s", event_.NotifyAt))
+		msgRows = append(msgRows, fmt.Sprintf("🔁 %s", event_.DeltaReadable()))
+	} else {
+		notifyButton := []map[string]string{{
+			"text": "напомнить",
+			"callback_data": "notify",
+		}}
+		markup = append(markup, notifyButton)
+	}
+
+	msg := strings.Join(msgRows, "\n\n")
 
 	event.EditCalbackMessage(ctx, msg, markup)
 

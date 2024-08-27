@@ -176,3 +176,7 @@ func (e *Event) NextDelta(asReadable bool) string {
 	}
 	return next
 }
+
+func (e *Event) NotifyNeeded() bool {
+	return e.NotifyAt != "" && e.Delta != ""
+}
