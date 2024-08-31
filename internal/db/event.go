@@ -1,8 +1,6 @@
 package db
 
 import (
-	"errors"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -62,42 +60,17 @@ func (event *Event) NotifyAtAsTimeObject() (time.Time, error) {
 	return notifyAt, err
 }
 
-func BuildEvent(ownerId int, chatId, text, timestamp, delta string) (*Event, error) {
-	e, err := (&Event{
+func NewEvent(ownerId int, chatId, text, notifyAt, delta string) *Event {
+	e := (&Event{
 		NewBaseFields(),
 		chatId,
 		ownerId,
 		text,
-		timestamp,
-		delta,
-	}).build()
+		notifyAt,
+		"0",
+	})
 
-	if err != nil {
-		return nil, err
-	}
-
-	return e, nil
-}
-
-func (e *Event) build() (*Event, error) {
-	month := "01"
-	day := "02"
-	format := fmt.Sprintf("%s.%s 15:04", day, month)
-
-	_, err := time.Parse(format, e.NotifyAt)
-
-	if err != nil {
-		slog.Error("build event error: " + err.Error())
-		return nil, err
-	}
-
-	// additionaly validate
-	_, found := map[string]int{"0": 1, "h": 1, "d": 1, "w": 1, "m": 1, "y": 1}[e.Delta]
-	if !found {
-		return nil, errors.New("delta format is incorrect")
-	}
-
-	return e, nil
+	return e
 }
 
 func (e *Event) UpdateNotifyAt() (string, error) {

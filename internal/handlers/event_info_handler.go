@@ -48,26 +48,7 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 		}
 	}
 
-	markup := [][]map[string]string{
-		{
-			{
-				"text": event_.NextDelta(true),
-				"callback_data": models.CallNextDelta(params.Id, params.Pagination.Offset).String(),
-			},
-		},
-		{
-			{
-				"text": "к списку",
-				"callback_data": models.CallList(params.Pagination.Offset, "<", "event").String(),
-			},
-		},
-		{
-			{
-				"text": "удалить",
-				"callback_data": models.CallDelete(params.Id, "event").String(),
-			},
-		},
-	}
+	markup := [][]map[string]string{}
 
 	msgRows := []string{
 		fmt.Sprintf("💬 %s", event_.Text),
@@ -76,13 +57,30 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 	if event_.NotifyNeeded() {
 		msgRows = append(msgRows, fmt.Sprintf("🔔 %s", event_.NotifyAt))
 		msgRows = append(msgRows, fmt.Sprintf("🔁 %s", event_.DeltaReadable()))
-	} else {
-		notifyButton := []map[string]string{{
-			"text": "напомнить",
-			"callback_data": "notify",
-		}}
-		markup = append(markup, notifyButton)
+		nextDeltaButton := []map[string]string{
+			{
+				"text": event_.NextDelta(true),
+				"callback_data": models.CallNextDelta(params.Id, params.Pagination.Offset).String(),
+			},
+		}
+		markup = append(markup, nextDeltaButton)
 	}
+
+	toListButton := []map[string]string{
+		{
+			"text": "к списку",
+			"callback_data": models.CallList(params.Pagination.Offset, "<", "event").String(),
+		},
+	}
+	deleteButton := []map[string]string{
+		{
+			"text": "удалить",
+			"callback_data": models.CallDelete(params.Id, "event").String(),
+		},
+	}
+
+	markup = append(markup, toListButton)
+	markup = append(markup, deleteButton)
 
 	msg := strings.Join(msgRows, "\n\n")
 
