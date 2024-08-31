@@ -55,6 +55,12 @@ func run(ctx context.Context, client telegram.ApiCaller, logger *slog.Logger, cf
 
 		events, err := (&db.Event{}).Filter(ctx)
 
+		if err != nil {
+			logger.Error("Error getting events: " + err.Error())
+			time.Sleep(CHECK_TIMEOUT_SEC * time.Second)
+			continue
+		}
+
 		notifyList := []db.Event{}
 
 		for _, event := range events {
@@ -75,11 +81,7 @@ func run(ctx context.Context, client telegram.ApiCaller, logger *slog.Logger, cf
 			}
 		}
 
-		if err != nil {
-			logger.Error("Error getting events: " + err.Error())
-		} else {
-			notify(ctx, client, notifyList, logger)
-		}
+		notify(ctx, client, notifyList, logger)
 
 		time.Sleep(CHECK_TIMEOUT_SEC * time.Second)
 	}
