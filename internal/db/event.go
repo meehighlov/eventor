@@ -18,6 +18,7 @@ type Event struct {
 
 	Text     string
 	NotifyAt string
+	Schedule string
 	Delta    string
 }
 
@@ -60,13 +61,14 @@ func (event *Event) NotifyAtAsTimeObject() (time.Time, error) {
 	return notifyAt, err
 }
 
-func NewEvent(ownerId int, chatId, text, notifyAt, delta string) *Event {
+func NewEvent(ownerId int, chatId, text, notifyAt, schedule, delta string) *Event {
 	e := (&Event{
 		NewBaseFields(),
 		chatId,
 		ownerId,
 		text,
 		notifyAt,
+		schedule,
 		"0",
 	})
 

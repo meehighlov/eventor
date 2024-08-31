@@ -32,13 +32,25 @@ func addEventSave(event telegram.Event) (int, error) {
 
 	message := event.GetMessage()
 
-	notifyAt := createNotifyAt(message.Text)
+	notifyAtList := findAllTimestampsByMeta(message.Text, "@")
+	scheduleList := findAllTimestampsByMeta(message.Text, "#")
+
+	notifyAt := ""
+	if len(notifyAtList) > 0 {
+		notifyAt = notifyAtList[0]
+	}
+
+	schedule := ""
+	if len(scheduleList) > 0 {
+		schedule = scheduleList[0]
+	}
 
 	e := db.NewEvent(
 		message.From.Id,
 		message.GetChatIdStr(),
 		message.Text,
 		notifyAt,
+		schedule,
 		"0",
 	)
 
@@ -50,21 +62,56 @@ func addEventSave(event telegram.Event) (int, error) {
 	return -1, nil
 }
 
-func createNotifyAt(text string) string {
-	notifyPattern, _ := regexp.Compile(`<.*>`)
-
-	notifyDates := notifyPattern.FindAllString(text, -1)
-
+func findAllTimestampsByMeta(text, meta string) []string {
+	notifyDates := searchByNotifyAtPatterns(text, meta)
 	if len(notifyDates) == 0 {
-		return ""
+		return []string{}
 	}
 
-	// take first notify
-	notifyAtRaw := notifyDates[0]
+	notifyAtList := []string{}
+	for _, notifyAtRaw := range notifyDates {
+		// todo call remove meta symbols
+		notifyAt := parseEventDate(notifyAtRaw)
+		if notifyAt != "" {
+			notifyAtList = append(notifyAtList, notifyAt)
+		}
+	}
 
-	notifyAtPrepared := strings.TrimSpace(strings.Replace(strings.Replace(notifyAtRaw, "<", "", 1), ">", "", 1))
+	slog.Debug("findAllNotifyAt", "notifyAt to be set", len(notifyAtList))
 
-	parts := strings.Split(notifyAtPrepared, " ")
+	return notifyAtList
+}
+
+func searchByNotifyAtPatterns(text, meta string) []string {
+	atParserDay, _ := regexp.Compile(meta + `[a-яА-Я]{2} [0-9][0-9]:[0-9][0-9][/s]?`)
+	atParserDate, _ := regexp.Compile(meta + `[0-9][0-9].[0-9][0-9] [0-9][0-9]:[0-9][0-9][/s]?`)
+
+	patterns := []regexp.Regexp{*atParserDay, *atParserDate}
+
+	clean := func(hits []string) []string {
+		cleaned := []string{}
+		for _, hit := range hits {
+			cleaned_ := strings.TrimSpace(strings.Replace(hit, meta, "", 1))
+			cleaned = append(cleaned, cleaned_)
+		}
+		return cleaned
+	}
+
+	notifyDates := []string{}
+	for _, p := range patterns {
+		hits := p.FindAllString(text, -1)
+
+		notifyDates = append(notifyDates, clean(hits)...)
+	}
+
+	slog.Debug("findAllNotifyAt", "hits count (after clean)", len(notifyDates))
+	slog.Debug("findAllNotifyAt", "matches (after clean)", notifyDates)
+
+	return notifyDates
+}
+
+func parseEventDate(eventDateRaw string) string {
+	parts := strings.Split(eventDateRaw, " ")
 
 	if len(parts) != 2 {
 		return ""
@@ -109,7 +156,7 @@ func createNotifyAt(text string) string {
 
 		notifyAt := now
 		for i := 1; i < 8; i ++ {
-			notifyAt = notifyAt.AddDate(0, 0, i)
+			notifyAt = notifyAt.AddDate(0, 0, 1)
 			if notifyAt.Weekday() == dayNum {
 				break
 			}
@@ -123,7 +170,7 @@ func createNotifyAt(text string) string {
 		return parseTargetNotifyAt(toValidate)
 	}
 
-	return parseTargetNotifyAt(notifyAtPrepared)
+	return parseTargetNotifyAt(eventDateRaw)
 }
 
 func AddEventHandler() map[int]telegram.CommandStepHandler {
