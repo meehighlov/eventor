@@ -29,7 +29,12 @@ func notify(ctx context.Context, client telegram.ApiCaller, events []db.Event, l
 	msgTemplate := "🔔 %s"
 	for _, event := range events {
 		msg := fmt.Sprintf(msgTemplate, event.Text)
-		_, err := client.SendMessageWithReplyMarkup(ctx, event.ChatId, msg, buildNotificationButtons(event.ID))
+		_, err := client.SendMessage(
+			ctx,
+			event.ChatId,
+			msg,
+			telegram.WithReplyMurkup(buildNotificationButtons(event.ID)),
+		)
 		if err != nil {
 			logger.Error("Notification not sent:" + err.Error())
 		}

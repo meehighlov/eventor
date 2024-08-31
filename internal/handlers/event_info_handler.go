@@ -51,7 +51,7 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 	markup := [][]map[string]string{}
 
 	msgRows := []string{
-		fmt.Sprintf("💬 %s", event_.Text),
+		fmt.Sprintf("💬 `%s`", event_.Text),
 	}
 
 	if event_.NotifyNeeded() {

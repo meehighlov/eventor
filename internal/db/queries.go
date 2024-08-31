@@ -89,15 +89,16 @@ func (e Event) Save(ctx context.Context) error {
 
 	_, err := sqliteConn.ExecContext(
 		ctx,
-		`INSERT INTO event(id, chatid, ownerid, text, notifyat, delta, createdat, updatedat)
-        VALUES($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT(id) DO UPDATE SET chatid=$2, ownerid=$3, text=$4, notifyat=$5, delta=$6, updatedat=$8
+		`INSERT INTO event(id, chatid, ownerid, text, notifyat, schedule, delta, createdat, updatedat)
+        VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        ON CONFLICT(id) DO UPDATE SET chatid=$2, ownerid=$3, text=$4, notifyat=$5, schedule=$6, delta=$7, updatedat=$9
         RETURNING id;`,
 		&e.ID,
 		&e.ChatId,
 		&e.OwnerId,
 		&e.Text,
 		&e.NotifyAt,
+		&e.Schedule,
 		&e.Delta,
 		&e.CreatedAt,
 		&e.UpdatedAt,
@@ -123,7 +124,7 @@ func (event Event) Filter(ctx context.Context) ([]Entity, error) {
 
 	where_ := strings.Join(where, " AND ")
 
-	query := `SELECT id, chatid, ownerid, text, notifyat, delta, createdat, updatedat FROM event`
+	query := `SELECT id, chatid, ownerid, text, notifyat, schedule, delta, createdat, updatedat FROM event`
 
 	if len(where) != 0 {
 		query += ` WHERE ` + where_
@@ -153,6 +154,7 @@ func (event Event) Filter(ctx context.Context) ([]Entity, error) {
 			&event.OwnerId,
 			&event.Text,
 			&event.NotifyAt,
+			&event.Schedule,
 			&event.Delta,
 			&event.CreatedAt,
 			&event.UpdatedAt,

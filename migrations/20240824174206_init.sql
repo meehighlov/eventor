@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS event (
     ownerid INTEGER,
     text VARCHAR,
     notifyat VARCHAR,
+    schedule VARCHAR,
     delta VARCHAR,
     createdat VARCHAR,
     updatedat VARCHAR
