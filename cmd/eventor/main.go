@@ -23,7 +23,6 @@ func main() {
 	bot := telegram.NewBot(cfg.BotToken, nil)
 
 	bot.RegisterCommandHandler("/start", auth.Auth(handlers.StartHandler))
-	bot.RegisterCommandHandler("/commands", auth.Auth(handlers.CommandsHandler))
 	bot.RegisterCommandHandler("/add", auth.Auth(telegram.FSM(handlers.AddEventHandler())))
 	bot.RegisterCommandHandler("/events", auth.Auth(handlers.ListEntityHandler("event")))
 
