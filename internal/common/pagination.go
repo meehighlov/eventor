@@ -1,10 +1,12 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strconv"
 
+	"github.com/meehighlov/eventor/internal/db"
 	"github.com/meehighlov/eventor/internal/models"
 )
 
@@ -120,4 +122,41 @@ func comparator[T Item](items []T, i, j int) bool {
 	countI := items[i].Compare()
 	countJ := items[j].Compare()
 	return countI < countJ
+}
+
+func BuildPagiResponse(
+	ctx context.Context,
+	entity db.Entity,
+	offset int,
+	direction string,
+	msgWhenListIsEmpty string,
+	msgWhenListHasItems string,
+) (string, [][]map[string]string) {
+	hideMarkup := [][]map[string]string{}
+	var msgByItemsLen = func(itemsLen int) string {
+		if itemsLen == 0 {
+			return msgWhenListIsEmpty
+		}
+		return msgWhenListHasItems
+	}
+
+	items, err := entity.Filter(ctx)
+	if err != nil {
+		return "Не могу разобрать запрос", hideMarkup
+	}
+	return msgByItemsLen(len(items)), BuildItemListMarkup(
+		items,
+		LIST_LIMIT,
+		offset,
+		direction,
+		entity.Name(),
+	)
+}
+
+func BuildItem(entity string, ownerId int) db.Entity {
+	var item db.Entity
+	if entity == "event" {
+		item = db.Event{OwnerId: ownerId}
+	}
+	return item
 }

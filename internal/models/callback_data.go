@@ -32,8 +32,8 @@ func CallNextDelta(id, offset string) *CallbackDataModel {
 	return newCallback("next_delta", id, offset, "", "event")
 }
 
-func CallEdit(id string) *CallbackDataModel {
-	return newCallback("edit", id, "", "", "event")
+func CallConflicts(id string) *CallbackDataModel {
+	return newCallback("conflicts", id, "", "", "event")
 }
 
 func newCallback(command, id, offset, direction, entity string) *CallbackDataModel {
