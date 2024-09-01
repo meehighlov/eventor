@@ -122,7 +122,10 @@ func (event Event) Filter(ctx context.Context) ([]Entity, error) {
 		where = append(where, "id=$id")
 	}
 	if event.Schedule != "" {
-		where = append(where, "schedule=$schedule")
+		// make searching range within day
+		// todo move it option on api level
+		event.Schedule = "%" + strings.Split(event.Schedule, " ")[0] + "%"
+		where = append(where, "schedule like $schedule")
 	}
 
 	where_ := strings.Join(where, " AND ")

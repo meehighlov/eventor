@@ -43,8 +43,8 @@ func buildConflictsMessage(ctx context.Context, targetId string, conflicts []db.
 	}
 
 	metas := []string{
-		"Обнаружены конфликты в расписании☝️",
-		fmt.Sprintf("Целевая временная метка %s", target.Schedule),
+		"☝️ Обнаружены конфликты в расписании",
+		fmt.Sprintf("🗓 %s", target.Schedule),
 	}
 
 	for _, c := range conflicts {
