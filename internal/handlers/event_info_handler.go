@@ -56,7 +56,7 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 
 	if event_.NotifyNeeded() {
 		msgRows = append(msgRows, fmt.Sprintf("🔔 %s", event_.NotifyAt))
-		msgRows = append(msgRows, fmt.Sprintf("🔁 напоминать %s", event_.DeltaReadable()))
+		msgRows = append(msgRows, fmt.Sprintf("🔁 %s", event_.DeltaReadable()))
 		nextDeltaButton := []map[string]string{
 			{
 				"text": event_.NextDelta(true),
