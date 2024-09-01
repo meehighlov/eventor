@@ -121,6 +121,9 @@ func (event Event) Filter(ctx context.Context) ([]Entity, error) {
 	if event.ID != "" {
 		where = append(where, "id=$id")
 	}
+	if event.Schedule != "" {
+		where = append(where, "schedule=$schedule")
+	}
 
 	where_ := strings.Join(where, " AND ")
 
@@ -137,6 +140,7 @@ func (event Event) Filter(ctx context.Context) ([]Entity, error) {
 		query,
 		sql.Named("ownerid", event.OwnerId),
 		sql.Named("id", event.ID),
+		sql.Named("schedule", event.Schedule),
 	)
 	if err != nil {
 		slog.Error("Error when filtering events " + err.Error())

@@ -17,7 +17,7 @@ func CallbackQueryHandler(event telegram.Event) error {
 
 	params := models.CallbackFromString(event.GetCallbackQuery().Data)
 
-	slog.Debug("handling callback query, command: " + params.Command + " entity: " + params.Entity)
+	slog.Debug("CallbackQueryHandler", "command", params.Command, "entity", params.Entity)
 
 	command := params.Command
 
@@ -30,5 +30,11 @@ func CallbackQueryHandler(event telegram.Event) error {
 	if command == "delete" {
 		DeleteItemCallbackQueryHandler(event)
 	}
+	if command == "conflicts" {
+		CheckConflictsCallbackHandler(event)
+	}
+	
+	slog.Debug("CallbackQueryHandler", "handled", command)
+
 	return nil
 }

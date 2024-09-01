@@ -155,3 +155,7 @@ func (e *Event) NextDelta(asReadable bool) string {
 func (e *Event) NotifyNeeded() bool {
 	return e.NotifyAt != "" && e.Delta != ""
 }
+
+func (e *Event) IsScheduled() bool {
+	return e.Schedule != ""
+}

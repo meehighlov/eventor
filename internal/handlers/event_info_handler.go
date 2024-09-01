@@ -56,7 +56,7 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 
 	if event_.NotifyNeeded() {
 		msgRows = append(msgRows, fmt.Sprintf("🔔 %s", event_.NotifyAt))
-		msgRows = append(msgRows, fmt.Sprintf("🔁 %s", event_.DeltaReadable()))
+		msgRows = append(msgRows, fmt.Sprintf("🔁 напоминать %s", event_.DeltaReadable()))
 		nextDeltaButton := []map[string]string{
 			{
 				"text": event_.NextDelta(true),
@@ -64,6 +64,17 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 			},
 		}
 		markup = append(markup, nextDeltaButton)
+	}
+
+	if event_.IsScheduled() {
+		msgRows = append(msgRows, fmt.Sprintf("🗓 в расписании %s", event_.Schedule))
+		conflictsButton := []map[string]string{
+			{
+				"text": "конфликты",
+				"callback_data": models.CallConflicts(params.Id).String(),
+			},
+		}
+		markup = append(markup, conflictsButton)
 	}
 
 	toListButton := []map[string]string{

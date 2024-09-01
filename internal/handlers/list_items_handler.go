@@ -24,7 +24,7 @@ func ListEntityHandler(entity string) telegram.CommandHandler {
 	
 		message := event.GetMessage()
 
-		items, err := (buildItem(entity, message.From.Id)).Filter(ctx)
+		items, err := (common.BuildItem(entity, message.From.Id)).Filter(ctx)
 	
 		if err != nil {
 			slog.Error("Error fetching items: " + err.Error())
@@ -59,7 +59,7 @@ func ListItemCallbackQueryHandler(event telegram.Event) error {
 	defer cancel()
 	callbackQuery := event.GetCallbackQuery()
 
-	params := models.CallbackFromString(event.GetCallbackQuery().Data)
+	params := models.CallbackFromString(callbackQuery.Data)
 
 	offset := params.Pagination.Offset
 
@@ -69,12 +69,13 @@ func ListItemCallbackQueryHandler(event telegram.Event) error {
 		return err
 	}
 
-	msg, markup := buildResponse(
+	msg, markup := common.BuildPagiResponse(
 		ctx,
-		params.Entity,
-		callbackQuery.From.Id,
+		db.Event{OwnerId: callbackQuery.From.Id},
 		offset_,
 		params.Pagination.Direction,
+		HEADER_MESSAGE_LIST_IS_EMPTY,
+		HEADER_MESSAGE_LIST_NOT_EMPTY,
 	)
 
 	event.EditCalbackMessage(
@@ -84,42 +85,4 @@ func ListItemCallbackQueryHandler(event telegram.Event) error {
 	)
 
 	return nil
-}
-
-func buildResponse(
-	ctx context.Context,
-	entity string,
-	ownerId int,
-	offset int,
-	direction string,
-) (string, [][]map[string]string) {
-	hideMarkup := [][]map[string]string{}
-	var msgByItemsLen = func(itemsLen int) string {
-		msg := HEADER_MESSAGE_LIST_NOT_EMPTY
-		if itemsLen == 0 {
-			msg = HEADER_MESSAGE_LIST_IS_EMPTY
-		}
-		return msg
-	}
-
-	items, err := buildItem(entity, ownerId).Filter(ctx)
-	if err != nil {
-		slog.Error("Error fetching items: " + err.Error())
-		return "Не могу разобрать запрос", hideMarkup
-	}
-	return msgByItemsLen(len(items)), common.BuildItemListMarkup(
-		items,
-		common.LIST_LIMIT,
-		offset,
-		direction,
-		entity,
-	)
-}
-
-func buildItem(entity string, ownerId int) db.Entity {
-	var item db.Entity
-	if entity == "event" {
-		item = db.Event{OwnerId: ownerId}
-	}
-	return item
 }
