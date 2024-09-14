@@ -124,6 +124,18 @@ func (update *UpdateResponse) GetLastUpdateId() int {
 	return update.Result[len(update.Result)-1].UpdateId
 }
 
+func (u *Update) GetChatIdStr() string {
+	if u.Message.Chat.Id != 0 {
+		return strconv.Itoa(u.Message.Chat.Id)
+	} 
+
+	if u.CallbackQuery.Message.Chat.Id != 0 {
+		return strconv.Itoa(u.CallbackQuery.Message.Chat.Id)
+	}
+
+	return ""
+}
+
 func (message *Message) GetChatIdStr() string {
 	return strconv.Itoa(message.Chat.Id)
 }

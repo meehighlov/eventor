@@ -3,16 +3,15 @@ package handlers
 import (
 	"context"
 
+	"github.com/meehighlov/eventor/internal/common"
 	"github.com/meehighlov/eventor/internal/config"
-	"github.com/meehighlov/eventor/internal/models"
-	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
-func CheckConflictsCallbackHandler(event telegram.Event) error {
+func CheckConflictsCallbackHandler(event common.Event) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
 	defer cancel()
 
-	params := models.CallbackFromString(event.GetCallbackQuery().Data)
+	params := common.CallbackFromString(event.GetCallbackQuery().Data)
 
 	event.ReplyCallbackQuery(
 		ctx,

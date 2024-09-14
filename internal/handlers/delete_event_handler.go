@@ -9,15 +9,13 @@ import (
 	"github.com/meehighlov/eventor/internal/common"
 	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
-	"github.com/meehighlov/eventor/internal/models"
-	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
-func DeleteItemCallbackQueryHandler(event telegram.Event) error {
+func DeleteItemCallbackQueryHandler(event common.Event) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
 	defer cancel()
 
-	params := models.CallbackFromString(event.GetCallbackQuery().Data)
+	params := common.CallbackFromString(event.GetCallbackQuery().Data)
 
 	baseFields := db.BaseFields{ID: params.Id}
 	events, err := (&db.Event{BaseFields: baseFields}).Filter(ctx)
@@ -40,7 +38,7 @@ func DeleteItemCallbackQueryHandler(event telegram.Event) error {
 		{
 			{
 				"text": "к списку",
-				"callback_data": models.CallList(strconv.Itoa(common.LIST_START_OFFSET), "<", "event").String(),
+				"callback_data": common.CallList(strconv.Itoa(common.LIST_START_OFFSET), "<", "event").String(),
 			},
 		},
 	}

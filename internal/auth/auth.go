@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/meehighlov/eventor/internal/common"
 	"github.com/meehighlov/eventor/internal/config"
-
-	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
 func isAuth(tgusername string) bool {
@@ -19,15 +18,15 @@ func isAuth(tgusername string) bool {
 	return false
 }
 
-func Auth(handler telegram.CommandHandler) telegram.CommandHandler {
-	return func(event telegram.Event) error {
+func Auth(logger *slog.Logger, handler common.HandlerType) common.HandlerType {
+	return func(event common.Event) error {
 		message := event.GetMessage()
 		if isAuth(message.From.Username) {
 			return handler(event)
 		}
 
 		msg := fmt.Sprintf("Unauthorized access attempt by user: id=%d usernmae=%s", message.From.Id, message.From.Username)
-		slog.Info(msg)
+		logger.Info(msg)
 
 		return nil
 	}

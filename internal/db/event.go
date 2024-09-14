@@ -81,6 +81,8 @@ func (e *Event) UpdateNotifyAt() (string, error) {
 		return "", err
 	}
 
+	disable := false
+
 	switch e.Delta {
 	case "h":
 		notifyAt = notifyAt.Add(time.Hour * 1)
@@ -93,12 +95,17 @@ func (e *Event) UpdateNotifyAt() (string, error) {
 	case "y":
 		notifyAt = notifyAt.AddDate(1, 0, 0)
 	case "0":
-		slog.Debug("delta is zero, notify timestampt not changed")
+		slog.Debug("delta is zero, disabling notification for oneshot event")
+		disable = true
 	default:
 		slog.Info("delta of value is not supported, notify date is not changed. Delta value:" + e.Delta)
 	}
 
-	e.NotifyAt = notifyAt.Format("02.01 15:04")
+	if disable {
+		e.NotifyAt = ""
+	} else {
+		e.NotifyAt = notifyAt.Format("02.01 15:04")
+	}
 
 	return e.NotifyAt, nil
 }

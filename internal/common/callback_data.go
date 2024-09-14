@@ -1,4 +1,4 @@
-package models
+package common
 
 import (
 	"strings"
@@ -34,6 +34,10 @@ func CallNextDelta(id, offset string) *CallbackDataModel {
 
 func CallConflicts(id string) *CallbackDataModel {
 	return newCallback("conflicts", id, "", "", "event")
+}
+
+func CallEdit(id, entity string) *CallbackDataModel {
+	return newCallback("edit_"+entity, id, "", "", entity)
 }
 
 func newCallback(command, id, offset, direction, entity string) *CallbackDataModel {

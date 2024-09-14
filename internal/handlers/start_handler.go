@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/meehighlov/eventor/internal/common"
 	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
-	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
-func StartHandler(event telegram.Event) error {
+func StartHandler(event common.Event) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
 	defer cancel()
 

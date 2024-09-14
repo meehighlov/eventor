@@ -8,8 +8,6 @@ import (
 	"github.com/meehighlov/eventor/internal/common"
 	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
-	"github.com/meehighlov/eventor/internal/models"
-	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
 const (
@@ -17,8 +15,8 @@ const (
 	HEADER_MESSAGE_LIST_IS_EMPTY = "Записей пока нет✨"
 )
 
-func ListEntityHandler(entity string) telegram.CommandHandler {
-	return func (event telegram.Event) error {
+func ListEntityHandler(entity string) common.HandlerType {
+	return func (event common.Event) error {
 		ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
 		defer cancel()
 	
@@ -54,12 +52,12 @@ func ListEntityHandler(entity string) telegram.CommandHandler {
 
 // ----------------------------------------------- List items for CallbackQuery ---------------------------------------------------
 
-func ListItemCallbackQueryHandler(event telegram.Event) error {
+func ListItemCallbackQueryHandler(event common.Event) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
 	defer cancel()
 	callbackQuery := event.GetCallbackQuery()
 
-	params := models.CallbackFromString(callbackQuery.Data)
+	params := common.CallbackFromString(callbackQuery.Data)
 
 	offset := params.Pagination.Offset
 

@@ -6,18 +6,17 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/meehighlov/eventor/internal/common"
 	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
-	"github.com/meehighlov/eventor/internal/models"
-	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
-func EventInfoCallbackQueryHandler(event telegram.Event) error {
+func EventInfoCallbackQueryHandler(event common.Event) error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
 	defer cancel()
 
 	callbackQuery := event.GetCallbackQuery()
-	params := models.CallbackFromString(callbackQuery.Data)
+	params := common.CallbackFromString(callbackQuery.Data)
 
 	baseFields := db.BaseFields{ID: params.Id}
 	events, err := (&db.Event{BaseFields: baseFields}).Filter(ctx)
@@ -60,7 +59,7 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 		nextDeltaButton := []map[string]string{
 			{
 				"text": event_.NextDelta(true),
-				"callback_data": models.CallNextDelta(params.Id, params.Pagination.Offset).String(),
+				"callback_data": common.CallNextDelta(params.Id, params.Pagination.Offset).String(),
 			},
 		}
 		markup = append(markup, nextDeltaButton)
@@ -71,25 +70,32 @@ func EventInfoCallbackQueryHandler(event telegram.Event) error {
 		conflictsButton := []map[string]string{
 			{
 				"text": "конфликты",
-				"callback_data": models.CallConflicts(params.Id).String(),
+				"callback_data": common.CallConflicts(params.Id).String(),
 			},
 		}
 		markup = append(markup, conflictsButton)
 	}
 
+	editButton := []map[string]string{
+		{
+			"text": "редактировать",
+			"callback_data": common.CallEdit(params.Id, "event").String(),
+		},
+	}
 	toListButton := []map[string]string{
 		{
 			"text": "к списку",
-			"callback_data": models.CallList(params.Pagination.Offset, "<", "event").String(),
+			"callback_data": common.CallList(params.Pagination.Offset, "<", "event").String(),
 		},
 	}
 	deleteButton := []map[string]string{
 		{
 			"text": "удалить",
-			"callback_data": models.CallDelete(params.Id, "event").String(),
+			"callback_data": common.CallDelete(params.Id, "event").String(),
 		},
 	}
 
+	markup = append(markup, editButton)
 	markup = append(markup, toListButton)
 	markup = append(markup, deleteButton)
 

@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/meehighlov/eventor/internal/db"
-	"github.com/meehighlov/eventor/internal/models"
 )
 
 const (
@@ -31,26 +30,26 @@ func buildPagiButtons(total, limit, offset int, entity string) [][]map[string]st
 		return [][]map[string]string{{
 			{
 				"text": "свернуть",
-				"callback_data": models.CallList(strconv.Itoa(LIST_START_OFFSET), "<<<", entity).String(),
+				"callback_data": CallList(strconv.Itoa(LIST_START_OFFSET), "<<<", entity).String(),
 			},
 		}}
 	}
 	var keyBoard []map[string]string
 	if offset + limit >= total {
-		previousButton := map[string]string{"text": "назад", "callback_data": models.CallList(strconv.Itoa(offset), "<<", entity).String()}
+		previousButton := map[string]string{"text": "назад", "callback_data": CallList(strconv.Itoa(offset), "<<", entity).String()}
 		keyBoard = []map[string]string{previousButton}
 	} else {
 		if offset == 0 {
-			nextButton := map[string]string{"text": "вперед", "callback_data": models.CallList(strconv.Itoa(offset), ">>", entity).String()}
+			nextButton := map[string]string{"text": "вперед", "callback_data": CallList(strconv.Itoa(offset), ">>", entity).String()}
 			keyBoard = []map[string]string{nextButton}
 		} else {
-			nextButton := map[string]string{"text": "вперед", "callback_data": models.CallList(strconv.Itoa(offset), ">>", entity).String()}
-			previousButton := map[string]string{"text": "назад", "callback_data": models.CallList(strconv.Itoa(offset), "<<", entity).String()}
+			nextButton := map[string]string{"text": "вперед", "callback_data": CallList(strconv.Itoa(offset), ">>", entity).String()}
+			previousButton := map[string]string{"text": "назад", "callback_data": CallList(strconv.Itoa(offset), "<<", entity).String()}
 			keyBoard = []map[string]string{previousButton, nextButton}
 		}
 	}
 
-	allButton := map[string]string{"text": fmt.Sprintf("показать все (%d)", total), "callback_data": models.CallList(strconv.Itoa(offset), "<>", entity).String()}
+	allButton := map[string]string{"text": fmt.Sprintf("показать все (%d)", total), "callback_data": CallList(strconv.Itoa(offset), "<>", entity).String()}
 	allButtonBar := []map[string]string{allButton}
 
 	markup := [][]map[string]string{}
@@ -78,7 +77,7 @@ func buildListButtons[T Item](items []T, limit, offset int) []map[string]string 
 		}
 		button := map[string]string{
 			"text": item.Info(),
-			"callback_data": models.CallInfo(item.Id(), strconv.Itoa(offset), item.Name()).String(),
+			"callback_data": CallInfo(item.Id(), strconv.Itoa(offset), item.Name()).String(),
 		}
 		buttons = append(buttons, button)
 	}

@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/meehighlov/eventor/internal/common"
 	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
-	"github.com/meehighlov/eventor/internal/models"
 	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
@@ -18,8 +18,12 @@ const CHECK_TIMEOUT_SEC = 10
 func buildNotificationButtons(eventId string) [][]map[string]string {
 	return [][]map[string]string{{
 		{
+			"text": "детали",
+			"callback_data": common.CallInfo(eventId, "0", "event").String(),
+		},
+		{
 			"text": "удалить",
-			"callback_data": models.CallDelete(eventId, "event").String(),
+			"callback_data": common.CallDelete(eventId, "event").String(),
 		},
 	},
 	}
