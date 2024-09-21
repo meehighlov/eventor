@@ -53,6 +53,8 @@ func editSave(event common.Event) (string, error) {
 
 	updatedEvent := ParseAndBuildEvent(message)
 
+	updatedEvent.Delta = event_.Delta
+
 	err = event_.Delete(ctx)
 	if err != nil {
 		event.Reply(ctx, err.Error())
