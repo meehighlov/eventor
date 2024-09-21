@@ -27,6 +27,7 @@ func main() {
 		"/start": auth.Auth(logger, handlers.StartHandler),
 		"/add": auth.Auth(logger, common.FSM(logger, chatCache, handlers.AddEventHandler())),
 		"/events": auth.Auth(logger, handlers.ListEntityHandler("event")),
+		"/conflicts": auth.Auth(logger, handlers.ConflictsCommandHandler),
 
 		// callback query handlers
 		"list": handlers.ListItemCallbackQueryHandler,

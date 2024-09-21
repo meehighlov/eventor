@@ -15,6 +15,10 @@ func getConflicts(ctx context.Context, scheduleId string) []db.Event {
 		return []db.Event{}
 	}
 
+	if !target.IsScheduled() {
+		return []db.Event{}
+	}
+
 	related_events, err := (&db.Event{OwnerId: target.OwnerId, Schedule: target.Schedule}).Filter(ctx)
 	if err != nil {
 		slog.Error("error occured while searching for conflicts, when filtering by owner id: " + err.Error())
