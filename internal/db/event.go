@@ -3,8 +3,6 @@ package db
 import (
 	"log/slog"
 	"time"
-
-	"github.com/meehighlov/eventor/internal/config"
 )
 
 type Event struct {
@@ -35,21 +33,10 @@ func (e Event) Name() string {
 }
 
 func (e Event) Compare() int {
-	location, err := time.LoadLocation(config.Cfg().Timezone)
-	if err != nil {
-		slog.Error("error loading location by timezone, using system timezone, error: " + err.Error() + " eventId: " + e.ID)
+	if e.IsScheduled() {
+		return 0
 	}
-	now := time.Now().In(location)
-	notify, err := time.Parse("02.01 15:04", e.NotifyAt)
-	if err != nil {
-		slog.Error("error parsing notify during count days to event begining: " + err.Error())
-		return -1
-	}
-
-	diff := now.Sub(notify)
-	diff_days := diff.Hours() / 24
-
-	return int(diff_days)
+	return 1
 }
 
 func (event *Event) NotifyAtAsTimeObject() (time.Time, error) {

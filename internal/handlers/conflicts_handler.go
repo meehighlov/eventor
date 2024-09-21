@@ -34,16 +34,9 @@ func ConflictsCommandHandler(event common.Event) error {
 	}
 
 	all_conflicts := []db.Event{}
-	seen := map[string]interface{}{}
 	for _, userEvent := range userEvents {
-		if _, found := seen[userEvent.Id()]; !found {
-			conflicts := getConflicts(ctx, userEvent.Id())
-			all_conflicts = append(all_conflicts, conflicts...)
-			for _, c := range conflicts {
-				seen[c.ID] = 1
-			}
-		}
-		seen[userEvent.Id()] = 1
+		conflicts := getConflicts(ctx, userEvent.Id())
+		all_conflicts = append(all_conflicts, conflicts...)
 	}
 
 	if len(all_conflicts) == 0 {
@@ -52,13 +45,17 @@ func ConflictsCommandHandler(event common.Event) error {
 	}
 
 	texts := []string{}
+	seen := map[string]struct{}{}
 	for _, conflict := range all_conflicts {
-		texts = append(texts, fmt.Sprintf("🔴 %s", conflict.Text))
+		if _, found := seen[conflict.ID]; !found {
+			texts = append(texts, fmt.Sprintf("🔴 %s", conflict.Text))
+		}
+		seen[conflict.ID] = struct{}{}
 	}
 
 	msg := strings.Join([]string{
 		"Обнаружены конфликты в расписании\n",
-		strings.Join(texts, "\n"),
+		strings.Join(texts, "\n\n"),
 	}, "\n")
 
 	event.Reply(ctx, msg)
