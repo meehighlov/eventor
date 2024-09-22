@@ -87,9 +87,8 @@ func buildListButtons[T Item](items []T, limit, offset int) []map[string]string 
 
 func BuildItemListMarkup[T Item](items []T, limit, offset int, direction, entity string) [][]map[string]string {
 	newOffset := offset
-	if direction == "<" {
+	// value "<" of direction is also possible
 
-	}
 	if direction == "<<<" {
 		newOffset = 0
 	}

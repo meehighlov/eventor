@@ -40,7 +40,7 @@ func ConflictsCommandHandler(event common.Event) error {
 	}
 
 	if len(all_conflicts) == 0 {
-		event.Reply(ctx, "Конфликтов нет")
+		event.Reply(ctx, "Конфликтов не обнаружено")
 		return nil
 	}
 

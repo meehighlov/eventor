@@ -14,8 +14,6 @@ func editStart(event common.Event) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
 	defer cancel()
 
-	event.AnswerCallbackQuery(ctx)
-
 	event.ReplyCallbackQuery(ctx, "Введи измененный текст")
 	params := common.CallbackFromString(event.GetCallbackQuery().Data)
 

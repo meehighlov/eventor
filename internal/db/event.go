@@ -1,8 +1,13 @@
 package db
 
 import (
+	"errors"
 	"log/slog"
+	"strings"
 	"time"
+
+	"github.com/meehighlov/eventor/internal/config"
+	"github.com/meehighlov/eventor/internal/parsers"
 )
 
 type Event struct {
@@ -56,7 +61,7 @@ func NewEvent(ownerId int, chatId, text, notifyAt, schedule, delta string) *Even
 		text,
 		notifyAt,
 		schedule,
-		"0",
+		delta,
 	})
 
 	return e
@@ -152,4 +157,20 @@ func (e *Event) NotifyNeeded() bool {
 
 func (e *Event) IsScheduled() bool {
 	return e.Schedule != ""
+}
+
+func (e *Event) GetScheduleNearestOrActualDate() (string, error) {
+	if !e.IsScheduled() {
+		return "", errors.New("event is not schedule, event id: " + e.ID)
+	}
+	if _, err := time.Parse("02.01 15:04", e.Schedule); err == nil {
+		return strings.Fields(e.Schedule)[0], nil
+	}
+
+	day := strings.Fields(e.Schedule)[0]
+	location, err := time.LoadLocation(config.Cfg().Timezone)
+	if err != nil {
+		return "", err
+	}
+	return parsers.FindNearestDateByDayName(day, true, location)
 }

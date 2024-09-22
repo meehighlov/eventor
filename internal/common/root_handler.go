@@ -1,8 +1,10 @@
 package common
 
 import (
+	"context"
 	"log/slog"
 
+	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
@@ -11,6 +13,9 @@ type HandlerType func(Event) error
 
 func CreateRootHandler(logger *slog.Logger, chatCahe *ChatCache, handlers map[string]HandlerType) telegram.UpdateHandler {
 	return func(update telegram.Update, client telegram.ApiCaller) error {
+		ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
+		defer cancel()
+
 		chatContext := chatCahe.GetOrCreateChatContext(update.GetChatIdStr())
 		command_ := update.Message.GetCommand()
 		command := ""
@@ -22,6 +27,8 @@ func CreateRootHandler(logger *slog.Logger, chatCahe *ChatCache, handlers map[st
 		} else {
 			if update.CallbackQuery.Id != "" {
 				params := CallbackFromString(update.CallbackQuery.Data)
+
+				client.AnswerCallbackQuery(ctx, update.CallbackQuery.Id)
 
 				logger.Debug("CallbackQueryHandler", "command", params.Command, "entity", params.Entity)
 				command = params.Command

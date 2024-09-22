@@ -8,8 +8,8 @@ import (
 
 
 func ParseAndBuildEvent(message *telegram.Message) *db.Event {
-	notifyAtList := parsers.FindAllTimestampsByMeta(message.Text, "@")
-	scheduleList := parsers.FindAllTimestampsByMeta(message.Text, "#")
+	notifyAtList := parsers.FindAllTimestampsByMeta(message.Text, "@", parsers.ParseNotifyAtDate)
+	scheduleList := parsers.FindAllTimestampsByMeta(message.Text, "&", parsers.ParseScheduleDate)
 
 	notifyAt := ""
 	if len(notifyAtList) > 0 {
@@ -27,7 +27,7 @@ func ParseAndBuildEvent(message *telegram.Message) *db.Event {
 		message.Text,
 		notifyAt,
 		schedule,
-		"0",
+		"h",
 	)
 
 	return e

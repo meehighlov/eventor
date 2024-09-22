@@ -1,6 +1,7 @@
 package parsers
 
 import (
+	"errors"
 	"log/slog"
 	"math"
 	"regexp"
@@ -10,28 +11,30 @@ import (
 	"github.com/meehighlov/eventor/internal/config"
 )
 
-
-func FindAllTimestampsByMeta(text, meta string) []string {
-	notifyDates := searchByNotifyAtPatterns(text, meta)
-	if len(notifyDates) == 0 {
+func FindAllTimestampsByMeta(text, meta string, parser func(string) (string, error)) []string {
+	timestamps := searchByTimestampPatterns(text, meta)
+	if len(timestamps) == 0 {
 		return []string{}
 	}
 
-	notifyAtList := []string{}
-	for _, notifyAtRaw := range notifyDates {
+	tsList := []string{}
+	for _, ts := range timestamps {
+		slog.Debug("FindAllTimestampsByMeta", "raw ts to parse", ts)
 		// todo call remove meta symbols
-		notifyAt := parseEventDate(notifyAtRaw)
-		if notifyAt != "" {
-			notifyAtList = append(notifyAtList, notifyAt)
+		prepared, err := parser(ts)
+		if err != nil {
+			slog.Debug("FindAllTimestampsByMeta", "timestamp parser error", err.Error())
+		} else {
+			tsList = append(tsList, prepared)
 		}
 	}
 
-	slog.Debug("findAllNotifyAt", "notifyAt to be set", len(notifyAtList))
+	slog.Debug("FindAllTimestampsByMeta", "timestamps to save count", len(tsList))
 
-	return notifyAtList
+	return tsList
 }
 
-func searchByNotifyAtPatterns(text, meta string) []string {
+func searchByTimestampPatterns(text, meta string) []string {
 	atParserDay, _ := regexp.Compile(meta + `[a-яА-Я]{2} [0-9][0-9]:[0-9][0-9][/s]?`)
 	atParserDate, _ := regexp.Compile(meta + `[0-9][0-9].[0-9][0-9] [0-9][0-9]:[0-9][0-9][/s]?`)
 	atParserTime, _ := regexp.Compile(meta + `[0-9][0-9]:[0-9][0-9][/s]?`)
@@ -54,42 +57,33 @@ func searchByNotifyAtPatterns(text, meta string) []string {
 		notifyDates = append(notifyDates, clean(hits)...)
 	}
 
-	slog.Debug("findAllNotifyAt", "hits count (after clean)", len(notifyDates))
-	slog.Debug("findAllNotifyAt", "matches (after clean)", notifyDates)
+	slog.Debug("searchByTimestampPatterns", "hits count (after clean)", len(notifyDates))
+	slog.Debug("searchByTimestampPatterns", "matches (after clean)", notifyDates)
 
 	return notifyDates
 }
 
-func parseEventDate(eventDateRaw string) string {
-	parts := strings.Split(eventDateRaw, " ")
+func ParseNotifyAtDate(eventDateRaw string) (string, error) {
+	parts := strings.Fields(eventDateRaw)
 
-	if len(parts) == 0 || len(parts) > 2{
-		return ""
-	}
-
-	days_map := map[string]time.Weekday {
-		"пн": time.Monday,
-		"вт": time.Tuesday,
-		"ср": time.Wednesday,
-		"чт": time.Thursday,
-		"пт": time.Friday,
-		"сб": time.Saturday,
-		"вс": time.Sunday,
+	if len(parts) == 0 || len(parts) > 2 {
+		return "", nil
 	}
 
 	location, err := time.LoadLocation(config.Cfg().Timezone)
 	if err != nil {
 		slog.Error("error loading location by timezone, using system timezone, while extracting notifyAt error: " + err.Error())
+		return "", err
 	}
 
-	parseTargetNotifyAt := func(notifyAt string) string {
+	parseTargetNotifyAt := func(notifyAt string) (string, error) {
 		layout := "02.01 15:04"
 		notifyAtObj, err := time.Parse(layout, notifyAt)
 		if err != nil {
-			return ""
+			return "", err
 		}
 
-		return notifyAtObj.Format(layout)
+		return notifyAtObj.Format(layout), nil
 	}
 
 	if len(parts) == 1 {
@@ -104,33 +98,93 @@ func parseEventDate(eventDateRaw string) string {
 		return parseTargetNotifyAt(toValidate)
 	}
 
-	day := parts[0]
-
 	// check date was specified as <day hh.mm>
-	dayNum, found := days_map[day]
-	if found {
-		now := time.Now().In(location)
-		diff := int(math.Abs(float64(now.Weekday() - dayNum)))
-
-		slog.Debug("creating notifyat", "day", day, "daynum", dayNum)
-		slog.Debug("creating notifyat", "days diff", diff)
-		slog.Debug("creating notifyat", "now day", now.Day())
-
-		notifyAt := now
-		for i := 1; i < 8; i ++ {
-			notifyAt = notifyAt.AddDate(0, 0, 1)
-			if notifyAt.Weekday() == dayNum {
-				break
-			}
-		}
-
+	if notifyAt, err := FindNearestDateByDayName(parts[0], false, location); err == nil {
 		toValidate := strings.Join([]string{
-			notifyAt.Format("02.01"),
+			notifyAt,
 			parts[1],
 		}, " ")
-
 		return parseTargetNotifyAt(toValidate)
 	}
 
 	return parseTargetNotifyAt(eventDateRaw)
+}
+
+func ParseScheduleDate(eventDateRaw string) (string, error) {
+	_, err := time.Parse("02.01 15:04", eventDateRaw)
+	if err == nil {
+		return eventDateRaw, nil
+	}
+
+	slog.Debug("ParseScheduleDate", "trying parse by day name", eventDateRaw)
+
+	days_map := map[string]time.Weekday {
+		"пн": time.Monday,
+		"вт": time.Tuesday,
+		"ср": time.Wednesday,
+		"чт": time.Thursday,
+		"пт": time.Friday,
+		"сб": time.Saturday,
+		"вс": time.Sunday,
+	}
+
+	parts := strings.Fields(eventDateRaw)
+	if len(parts) != 2 {
+		slog.Error("ParseScheduleDate: not expected parts len")
+		return "", errors.New("ParseScheduleDate: not expected parts len")
+	}
+
+	day := parts[0]
+	if _, found := days_map[day]; !found {
+		slog.Error("ParseScheduleDate: not expected day")
+		return "", errors.New("ParseScheduleDate: not expected day")
+	}
+
+	timeRaw := parts[1]
+	_, err = time.Parse("15:04", timeRaw)
+	if err != nil {
+		slog.Error("ParseScheduleDate", "parse time error", err.Error())
+		return "", err
+	}
+
+	return strings.Join([]string{day, timeRaw}, " "), nil
+}
+
+func FindNearestDateByDayName(dayName string, includeToday bool, location *time.Location) (string, error) {
+	days_map := map[string]time.Weekday {
+		"пн": time.Monday,
+		"вт": time.Tuesday,
+		"ср": time.Wednesday,
+		"чт": time.Thursday,
+		"пт": time.Friday,
+		"сб": time.Saturday,
+		"вс": time.Sunday,
+	}
+	now := time.Now().In(location)
+	dayNum, found := days_map[dayName]
+	if !found {
+		return "", errors.New("FindDateByDayName: not found day number by day name: " + dayName)
+	}
+	diff := int(math.Abs(float64(now.Weekday() - dayNum)))
+
+	slog.Debug("creating notifyat", "day", dayName, "daynum", dayNum)
+	slog.Debug("creating notifyat", "days diff", diff)
+	slog.Debug("creating notifyat", "now day", now.Day())
+
+	notifyAt := now
+
+	if includeToday {
+		if notifyAt.Weekday() == dayNum {
+			return notifyAt.Format("02.01"), nil
+		}
+	}
+
+	for i := 1; i < 8; i ++ {
+		notifyAt = notifyAt.AddDate(0, 0, 1)
+		if notifyAt.Weekday() == dayNum {
+			break	
+		}
+	}
+
+	return notifyAt.Format("02.01"), nil
 }

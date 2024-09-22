@@ -19,21 +19,50 @@ func getConflicts(ctx context.Context, scheduleId string) []db.Event {
 		return []db.Event{}
 	}
 
-	related_events, err := (&db.Event{OwnerId: target.OwnerId, Schedule: target.Schedule}).Filter(ctx)
+	conflicts, err := findConflictsByDaysComparison(ctx, target)
+
 	if err != nil {
 		slog.Error("error occured while searching for conflicts, when filtering by owner id: " + err.Error())
 		return []db.Event{}
 	}
 
+	return conflicts
+}
+
+func findConflictsByDaysComparison(ctx context.Context, target *db.Event) ([]db.Event, error) {
+	related_events, err := (&db.Event{OwnerId: target.OwnerId}).Filter(ctx)
+	if err != nil {
+		return []db.Event{}, err
+	}
+
 	conflicts := []db.Event{}
+
+	targetEventDate, err := target.GetScheduleNearestOrActualDate()
+	if err != nil {
+		slog.Error("findRelatedEvents", "error parsing target date by target day name", err.Error())
+		return conflicts, err
+	}
+
 	for _, event_ := range related_events {
 		if target.ID == event_.Id() {
 			continue
 		}
-		conflicts = append(conflicts, event_.(db.Event))
+
+		event := event_.(db.Event)
+
+		eventDate, err := event.GetScheduleNearestOrActualDate()
+		if err != nil {
+			slog.Error("findRelatedEvents", "error parsing event date by event day name", event.Schedule)
+			continue
+		}
+	
+		if eventDate == targetEventDate {
+			slog.Debug("findConflictsByDaysComparison", "success comarison for event date", eventDate)
+			conflicts = append(conflicts, event)
+		}
 	}
 
-	return conflicts
+	return conflicts, nil
 }
 
 func buildConflictsMessage(ctx context.Context, targetId string, conflicts []db.Event) string {
