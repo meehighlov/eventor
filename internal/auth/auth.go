@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 
@@ -19,10 +20,10 @@ func isAuth(tgusername string) bool {
 }
 
 func Auth(logger *slog.Logger, handler common.HandlerType) common.HandlerType {
-	return func(event common.Event) error {
+	return func(ctx context.Context, event common.Event) error {
 		message := event.GetMessage()
 		if isAuth(message.From.Username) {
-			return handler(event)
+			return handler(ctx, event)
 		}
 
 		msg := fmt.Sprintf("Unauthorized access attempt by user: id=%d usernmae=%s", message.From.Id, message.From.Username)

@@ -19,7 +19,7 @@ type Event interface {
 }
 
 type CommandHandler func(Event) error
-type CommandStepHandler func(Event) (string, error)
+type CommandStepHandler func(context.Context, Event) (string, error)
 
 type event struct {
 	client telegram.ApiCaller

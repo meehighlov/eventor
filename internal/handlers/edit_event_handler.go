@@ -5,15 +5,11 @@ import (
 	"log/slog"
 
 	"github.com/meehighlov/eventor/internal/common"
-	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
 )
 
 
-func editStart(event common.Event) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
-	defer cancel()
-
+func editStart(ctx context.Context, event common.Event) (string, error) {
 	event.ReplyCallbackQuery(ctx, "Введи измененный текст")
 	params := common.CallbackFromString(event.GetCallbackQuery().Data)
 
@@ -22,10 +18,7 @@ func editStart(event common.Event) (string, error) {
 	return "2", nil
 }
 
-func editSave(event common.Event) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
-	defer cancel()
-
+func editSave(ctx context.Context, event common.Event) (string, error) {
 	// message we accept here is not bound to callback query
 	// so get params we saved in previous step from cache
 	eventId := event.GetContext().GetTexts()[0]

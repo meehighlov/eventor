@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/meehighlov/eventor/internal/common"
-	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
 )
 
@@ -16,10 +15,7 @@ const (
 )
 
 func ListEntityHandler(entity string) common.HandlerType {
-	return func (event common.Event) error {
-		ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
-		defer cancel()
-	
+	return func (ctx context.Context, event common.Event) error {
 		message := event.GetMessage()
 
 		items, err := (common.BuildItem(entity, message.From.Id)).Filter(ctx)
@@ -52,9 +48,7 @@ func ListEntityHandler(entity string) common.HandlerType {
 
 // ----------------------------------------------- List items for CallbackQuery ---------------------------------------------------
 
-func ListItemCallbackQueryHandler(event common.Event) error {
-	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
-	defer cancel()
+func ListItemCallbackQueryHandler(ctx context.Context, event common.Event) error {
 	callbackQuery := event.GetCallbackQuery()
 
 	params := common.CallbackFromString(callbackQuery.Data)

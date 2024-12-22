@@ -25,7 +25,6 @@ func main() {
 
 	updateHandlers := map[string]common.HandlerType{
 		"/start": auth.Auth(logger, handlers.StartHandler),
-		"/add": auth.Auth(logger, common.FSM(logger, chatCache, handlers.AddEventHandler())),
 		"/events": auth.Auth(logger, handlers.ListEntityHandler("event")),
 		"/conflicts": auth.Auth(logger, handlers.ConflictsCommandHandler),
 
@@ -36,6 +35,8 @@ func main() {
 		"delete": handlers.DeleteItemCallbackQueryHandler,
 		"conflicts": handlers.CheckConflictsCallbackHandler,
 		"edit_event": common.FSM(logger, chatCache, handlers.EditEventHandlers()),
+
+		"default": handlers.DefaultTextHandler,
 	}
 
 	rootHandler := common.CreateRootHandler(

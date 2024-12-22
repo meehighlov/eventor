@@ -6,14 +6,10 @@ import (
 	"strings"
 
 	"github.com/meehighlov/eventor/internal/common"
-	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
 )
 
-func CheckConflictsCallbackHandler(event common.Event) error {
-	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
-	defer cancel()
-
+func CheckConflictsCallbackHandler(ctx context.Context, event common.Event) error {
 	params := common.CallbackFromString(event.GetCallbackQuery().Data)
 
 	event.ReplyCallbackQuery(
@@ -24,10 +20,7 @@ func CheckConflictsCallbackHandler(event common.Event) error {
 	return nil
 }
 
-func ConflictsCommandHandler(event common.Event) error {
-	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
-	defer cancel()
-
+func ConflictsCommandHandler(ctx context.Context, event common.Event) error {
 	userEvents, err := db.Event{OwnerId: event.GetMessage().From.Id}.Filter(ctx)
 	if err != nil {
 		event.Reply(ctx, "Произошла ошибка выгрузки событий: " + err.Error())

@@ -7,14 +7,10 @@ import (
 	"strings"
 
 	"github.com/meehighlov/eventor/internal/common"
-	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
 )
 
-func EventInfoCallbackQueryHandler(event common.Event) error {
-	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
-	defer cancel()
-
+func EventInfoCallbackQueryHandler(ctx context.Context, event common.Event) error {
 	callbackQuery := event.GetCallbackQuery()
 	params := common.CallbackFromString(callbackQuery.Data)
 

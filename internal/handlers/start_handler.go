@@ -5,14 +5,10 @@ import (
 	"fmt"
 
 	"github.com/meehighlov/eventor/internal/common"
-	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
 )
 
-func StartHandler(event common.Event) error {
-	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
-	defer cancel()
-
+func StartHandler(ctx context.Context, event common.Event) error {
 	message := event.GetMessage()
 
 	user := db.User{

@@ -1,16 +1,17 @@
 package common
 
 import (
+	"context"
 	"log/slog"
 )
 
 func FSM(logger *slog.Logger, chatCahe *ChatCache, handlers map[string]CommandStepHandler) HandlerType {
-	return func(event Event) error {
-		ctx := event.GetContext()
-		stepTODO := ctx.stepTODO
+	return func(ctx context.Context, event Event) error {
+		chatCtx := event.GetContext()
+		stepTODO := chatCtx.stepTODO
 
 		logger.Debug("FSM", "setting command in progress:", event.GetCommand())
-		ctx.SetCommandInProgress(event.GetCommand())
+		chatCtx.SetCommandInProgress(event.GetCommand())
 
 		nextStep := STEPS_DONE
 
@@ -18,23 +19,23 @@ func FSM(logger *slog.Logger, chatCahe *ChatCache, handlers map[string]CommandSt
 
 		if !found {
 			logger.Error("FSM: handler not found, resetting context", "step", stepTODO, "command", event.GetCommand())
-			ctx.Reset()
+			chatCtx.Reset()
 			return nil
 		}
 
 		logger.Debug("FSM called", "command", event.GetCommand(), "handling step", stepTODO)
 
-		nextStep, _ = stepHandler(event)
+		nextStep, _ = stepHandler(ctx, event)
 
 		if nextStep == STEPS_DONE {
 			logger.Debug("FSM resetting context - termination step reached", "command", event.GetCommand(), "handling step", stepTODO)
-			ctx.Reset()
+			chatCtx.Reset()
 			return nil
 		}
 
-		ctx.SetStepTODO(nextStep)
+		chatCtx.SetStepTODO(nextStep)
 
-		logger.Debug("FSM", "command in progress after processing", ctx.GetCommandInProgress())
+		logger.Debug("FSM", "command in progress after processing", chatCtx.GetCommandInProgress())
 
 		return nil
 	}

@@ -8,7 +8,7 @@ import (
 	"github.com/meehighlov/eventor/pkg/telegram"
 )
 
-type HandlerType func(Event) error
+type HandlerType func(context.Context, Event) error
 
 
 func CreateRootHandler(logger *slog.Logger, chatCahe *ChatCache, handlers map[string]HandlerType) telegram.UpdateHandler {
@@ -47,9 +47,14 @@ func CreateRootHandler(logger *slog.Logger, chatCahe *ChatCache, handlers map[st
 
 		handler, found := handlers[command]
 		if found {
-			handler(event)
+			handler(ctx, event)
 		} else {
-			logger.Debug("handler not found", "command:", command)
+			logger.Debug("handler not found, invoking default handler")
+			if defaultHanlder, foundDefault := handlers["default"]; foundDefault {
+				defaultHanlder(ctx, event)
+			} else {
+				logger.Debug("default handler not found, skipping")
+			}
 		}
 
 		return nil

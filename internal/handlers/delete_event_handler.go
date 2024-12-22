@@ -7,14 +7,10 @@ import (
 	"strconv"
 
 	"github.com/meehighlov/eventor/internal/common"
-	"github.com/meehighlov/eventor/internal/config"
 	"github.com/meehighlov/eventor/internal/db"
 )
 
-func DeleteItemCallbackQueryHandler(event common.Event) error {
-	ctx, cancel := context.WithTimeout(context.Background(), config.Cfg().HandlerTmeout())
-	defer cancel()
-
+func DeleteItemCallbackQueryHandler(ctx context.Context, event common.Event) error {
 	params := common.CallbackFromString(event.GetCallbackQuery().Data)
 
 	baseFields := db.BaseFields{ID: params.Id}
