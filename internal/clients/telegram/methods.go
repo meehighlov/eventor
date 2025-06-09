@@ -18,10 +18,8 @@ func (c *Client) Edit(
 	ctx context.Context,
 	text string,
 	update *Update,
-	keyboard []*[]map[string]interface{},
 	opts ...SendMessageOption,
 ) (*Message, error) {
-	opts = append(opts, WithReplyMurkup(keyboard))
 	msg, err := c.EditMessageText(
 		ctx,
 		update.GetChatIdStr(),

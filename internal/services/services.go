@@ -9,6 +9,7 @@ import (
 	"github.com/meehighlov/eventor/internal/constants"
 	"github.com/meehighlov/eventor/internal/parsers"
 	"github.com/meehighlov/eventor/internal/repositories"
+	"github.com/meehighlov/eventor/internal/services/element"
 	"github.com/meehighlov/eventor/internal/services/event"
 	"github.com/meehighlov/eventor/internal/services/user"
 	"github.com/meehighlov/eventor/internal/services/watcher"
@@ -19,6 +20,7 @@ type Services struct {
 	User    *user.Service
 	Watcher *watcher.Service
 	Event   *event.Service
+	Element *element.Service
 }
 
 func New(
@@ -35,5 +37,6 @@ func New(
 		User:    user.New(cfg, logger, repositories, clients, builders, validators, constants),
 		Watcher: watcher.New(cfg, logger, repositories, clients, builders, validators, constants),
 		Event:   event.New(cfg, logger, repositories, clients, builders, validators, constants, parsers),
+		Element: element.New(cfg, logger, repositories, clients, builders, validators, constants, parsers),
 	}
 }

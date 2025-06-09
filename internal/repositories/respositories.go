@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/meehighlov/eventor/internal/config"
+	"github.com/meehighlov/eventor/internal/repositories/element"
 	"github.com/meehighlov/eventor/internal/repositories/event"
 	"github.com/meehighlov/eventor/internal/repositories/user"
 	"gorm.io/driver/postgres"
@@ -17,6 +18,7 @@ import (
 type Repositories struct {
 	User  *user.Repository
 	Event *event.Repository
+	Element *element.Repository
 }
 
 func New(cfg *config.Config, logger *slog.Logger) *Repositories {
@@ -40,7 +42,8 @@ func New(cfg *config.Config, logger *slog.Logger) *Repositories {
 	}
 
 	return &Repositories{
-		User:  user.New(cfg, db, logger),
-		Event: event.New(cfg, db, logger),
+		User:    user.New(cfg, db, logger),
+		Event:   event.New(cfg, db, logger),
+		Element: element.New(cfg, db, logger),
 	}
 }

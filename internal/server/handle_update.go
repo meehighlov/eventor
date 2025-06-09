@@ -103,6 +103,26 @@ func (s *Server) handle(ctx context.Context, update *telegram.Update, command st
 		return s.services.Event.Info(ctx, update)
 	case s.constants.COMMAND_NEXT_DELTA:
 		return s.services.Event.Info(ctx, update)
+	case s.constants.COMMAND_ELEMENTS, s.constants.COMMAND_LIST_ELEMENT:
+		return s.services.Element.List(ctx, update)
+	case s.constants.COMMAND_ADD_ELEMENT:
+		return s.services.Element.Add(ctx, update)
+	case s.constants.COMMAND_ADD_ELEMENT_SAVE:
+		return s.services.Element.AddSave(ctx, update)
+	case s.constants.COMMAND_INFO_ELEMENT, s.constants.COMMAND_ELEMENT_SWITCH_STATUS:
+		return s.services.Element.Info(ctx, update)
+	case s.constants.COMMAND_EDIT_ELEMENT:
+		return s.services.Element.Edit(ctx, update)
+	case s.constants.COMMAND_EDIT_ELEMENT_NAME_SAVE:
+		return s.services.Element.EditNameSave(ctx, update)
+	case s.constants.COMMAND_EDIT_ELEMENT_LINK_SAVE:
+		return s.services.Element.EditLinkSave(ctx, update)
+	case s.constants.COMMAND_EDIT_ELEMENT_REQUEST:
+		return s.services.Element.EditRequest(ctx, update)
+	case s.constants.COMMAND_DELETE_ELEMENT:
+		return s.services.Element.Delete(ctx, update)
+	case s.constants.COMMAND_DELETE_ELEMENT_CONFIRM:
+		return s.services.Element.DeleteConfirm(ctx, update)
 	default:
 		return s.services.Event.Add(ctx, update)
 	}

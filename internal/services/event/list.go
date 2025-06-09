@@ -32,11 +32,6 @@ func (s *Service) List(ctx context.Context, update *telegram.Update) error {
 		keyboard.AppendAsLine(button)
 	}
 
-	if update.IsCallback() {
-		_, err := s.clients.Telegram.Edit(ctx, "Ваши события", update, keyboard.Murkup(), telegram.WithMarkDown())
-		return err
-	}
-
 	_, err = s.clients.Telegram.Reply(
 		ctx,
 		"Вcе события",

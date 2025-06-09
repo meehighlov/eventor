@@ -65,7 +65,7 @@ func (s *Service) Info(ctx context.Context, update *telegram.Update) error {
 
 	msg := strings.Join(msgRows, "\n\n")
 
-	s.clients.Telegram.Edit(ctx, msg, update, keyboard.Murkup(), telegram.WithMarkDown())
+	s.clients.Telegram.Edit(ctx, msg, update, telegram.WithReplyMurkup(keyboard.Murkup()), telegram.WithMarkDown())
 
 	return nil
 }
